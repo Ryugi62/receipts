@@ -1,0 +1,32 @@
+{
+  "name": "receipts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Receipts: check an AI chatbot's answer claim by claim against Wikipedia, in the browser, and see the sentence behind every verdict.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "layers": "node scripts/check-layers.mjs",
+    "eval:sym": "tsx scripts/eval-symmetric.ts",
+    "eval:fs": "tsx scripts/eval-factscore.ts",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4318"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "split": "dev",
+  "level": "fact",
+  "topics": 1,
+  "items": 20,
+  "model": "Xenova/DeBERTa-v3-base-mnli-fever-anli",
+  "runSeconds": 53,
+  "when": "2026-10-05T08:30:12.450Z"
+}

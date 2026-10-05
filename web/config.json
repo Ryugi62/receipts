@@ -1,0 +1,1 @@
+{ "model": "Xenova/nli-deberta-v3-xsmall", "gate": { "minSimilarity": 0.3, "minSharedTokens": 1, "ignoreTopicTokens": false }, "thresholds": { "entail": 0.6, "contradict": 0.7 }, "chosenOn": "placeholder until E2 dev sweep" }
