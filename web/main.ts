@@ -1,7 +1,7 @@
 // Infrastructure: browser UI wiring. All logic lives in src/.
 import { env } from '@huggingface/transformers'
 import { checkAnswer, type ClaimResult, type CheckOptions, type PartResult } from '../src/application/checkAnswer'
-import { naiveVerdict } from '../src/domain/verdict'
+import { naiveVerdict, type Thresholds } from '../src/domain/verdict'
 import { WikipediaSource } from '../src/adapters/wikipedia'
 import { TransformersNli, TransformersRanker } from '../src/adapters/transformers'
 import config from './config.json'
@@ -35,7 +35,7 @@ const deps = {
   ranker: new TransformersRanker(undefined, onProgress),
   nli: new TransformersNli(config.model, 'q8', onProgress),
 }
-const opts: CheckOptions = { topK: 5, gate: config.gate, thresholds: config.thresholds }
+const opts: CheckOptions = { topK: 5, gate: config.gate, thresholds: config.thresholds as Thresholds }
 
 const howList = $('how-numbers')
 for (const line of numbers.lines as string[]) {
