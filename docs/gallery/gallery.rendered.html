@@ -40,10 +40,10 @@
   <h2>It won’t judge on the wrong sentence — measured</h2>
   <div class="row">
     <div class="stat bad"><p class="big">74.3%</p><p>of <b>unrelated</b> sentences called a “contradiction” by the small model on its own</p></div>
-    <div class="stat good"><p class="big">0.0%</p><p>called a conflict by Receipts — the relevance gate sets them aside</p></div>
+    <div class="stat good"><p class="big">0.3%</p><p>called a conflict by Receipts — the relevance gate sets them aside</p></div>
   </div>
-  <p style="margin-top:28px">Real ChatGPT answers with human labels (FActScore; 2,774 facts on 89 held-out topics): when Receipts says Backed, humans agree 83.7% (1119 facts). Everything else is left for you to check. Overall it is about as accurate as a plain "top sentence + raw model" checker (balanced accuracy 68.0% vs 67.1%).</p>
-  <p>When the right article is not found (stress test: other pages only), the plain checker based 216 conflicts on a sentence about someone or something else; Receipts: 0.</p>
+  <p style="margin-top:28px">On a fresh held-out set of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts): when Receipts says Backed, humans agree 94.1%; it raises a false "may conflict" on true facts 3.6% of the time, vs 12.9% for a simpler top-sentence checker.</p>
+  <p>Balanced accuracy 70.7% vs 66.6% for that simpler checker. Settings were chosen on separate development topics and frozen before this run.</p>
   <p class="src">Symmetric FEVER v0.2 test, 712 pairs (Schuster et al., EMNLP 2019) · FActScore ChatGPT biographies with human labels (Min et al., EMNLP 2023) · settings chosen on dev topics, frozen before the held-out run · github.com/Ryugi62/receipts/docs/eval.md</p>
 </section>
 <section id="arch">

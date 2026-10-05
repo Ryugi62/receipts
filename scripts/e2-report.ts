@@ -11,8 +11,11 @@ const model = arg('model', 'nli-deberta-v3-xsmall')!
 const split = arg('split', 'test')!
 const level = arg('level', 'fact')!
 const data = arg('data', 'ChatGPT')!
-const file = `docs/results/e2-${level}-${split}-${model}${data === 'ChatGPT' ? '' : '-' + data}.jsonl`
-const chosen = JSON.parse(readFileSync(`docs/results/chosen-fact-${model}.json`, 'utf8')) as { gate: GateConfig; thresholds: Thresholds }
+const tag = arg('tag', '')
+const file = `docs/results/e2-${level}-${split}-${model}${data === 'ChatGPT' ? '' : '-' + data}${tag ? '-' + tag : ''}.jsonl`
+const chosenPath = arg('chosen', `docs/results/chosen-fact-${model}.json`)!
+const chosen = JSON.parse(readFileSync(chosenPath, 'utf8')) as { gate: GateConfig; thresholds: Thresholds }
+const outSuffix = arg('out', '')
 type Ev = { s: string; page: string; sim: number; en: number; co: number }
 type Rec = { key: string; topic: string | null; claim: string; label: 'S' | 'NS'; ev?: Ev[]; parts?: { text: string; ev: Ev[] }[] }
 const recs = readJsonl(file) as Rec[]
@@ -28,7 +31,7 @@ const toEv = (claim: string, topic: string | null, e: Ev, gate: GateConfig | nul
 type System = { name: string; part: (claim: string, topic: string | null, ev: Ev[]) => Verdict }
 const off = { ...chosen.thresholds, contradictNeedsSubject: false, entailNeedsSubject: false }
 const systems: System[] = [
-  { name: 'Receipts (frozen dev settings)', part: (c, t, ev) => decideVerdict(ev.map((e) => toEv(c, t, e, chosen.gate)), chosen.thresholds) },
+  { name: `Receipts (${chosenPath.includes('v2') ? 'v2' : 'v1'} settings, frozen on dev)`, part: (c, t, ev) => decideVerdict(ev.map((e) => toEv(c, t, e, chosen.gate)), chosen.thresholds) },
   { name: 'same thresholds, gate OFF', part: (c, t, ev) => decideVerdict(ev.map((e) => toEv(c, t, e, null)), off) },
   { name: 'plain checker (top sentence + raw NLI label)', part: (c, t, ev) => naiveVerdict(ev.map((e) => toEv(c, t, e, null))) },
   { name: 'flag everything', part: () => ({ label: 'no_receipt', receipts: [], disagreement: false, gated: 0 }) },
@@ -96,12 +99,27 @@ function table(rs: Rec[], title: string) {
 // Stress test (designed on dev): keep only evidence from pages that are NOT the subject's own article — as if the person had
 // no Wikipedia page, which is common for the less famous things students ask about. Ideal behaviour: few verdicts.
 const otherPagesOnly = (rs: Rec[]): Rec[] => rs.map((r) => ({ ...r, ev: r.ev?.filter((e) => !aboutSubject(e.page, r.topic, null)), parts: r.parts?.map((p) => ({ ...p, ev: p.ev.filter((e) => !aboutSubject(e.page, r.topic, null)) })) }))
+// Calibration: bin facts by the highest entail score among gated sentences; share of human-supported facts per bin.
+function calibration(rs: Rec[]) {
+  const bins = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0001]
+  const rows = bins.slice(0, -1).map((lo, i) => ({ lo, hi: bins[i + 1], n: 0, s: 0 }))
+  for (const r of rs) {
+    if (r.parts) continue
+    const ev = (r.ev ?? []).map((e) => toEv(r.claim, r.topic, e, chosen.gate)).filter((e) => e.passesGate)
+    const top = ev.length ? Math.max(...ev.map((e) => e.inference.entail)) : 0
+    const b = rows.find((x) => top >= x.lo && top < x.hi)!
+    b.n++; b.s += r.label === 'S' ? 1 : 0
+  }
+  return ['| Highest "backs" score among gated sentences | Facts | Humans: supported |', '|---|---|---|',
+    ...rows.map((x) => `| ${x.lo.toFixed(1)}–${Math.min(1, x.hi).toFixed(1)} | ${x.n} | ${x.n ? pct(x.s / x.n) : '—'} |`)].join('\n')
+}
 const report = [
   `# E2 ${data} biographies, ${level} level, ${split.toUpperCase()} topics — model ${model}`,
   `Settings frozen on dev: gate ${JSON.stringify(chosen.gate)}, thresholds ${JSON.stringify(chosen.thresholds)}. Intervals: 95 % bootstrap over topics (1,000 resamples).`,
   '', table(recs, `All ${split} topics`), '',
   table(recs.filter((r) => !SEEN.has(r.key.split('|')[0])), `Without the topics used as UI samples during development (${[...SEEN].join(', ')})`),
   '', table(otherPagesOnly(recs), "Stress test — evidence only from other pages (as if the subject had no article of their own)"),
+  ...(level === 'fact' ? ['', '### Calibration (is a higher "backs" score more often right?)', '', calibration(recs)] : []),
 ].join('\n')
 console.log(report)
-writeFileSync(file.replace('.jsonl', '.report.md'), report + '\n')
+writeFileSync(file.replace('.jsonl', `${outSuffix}.report.md`), report + '\n')

@@ -5,71 +5,68 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 const inc = (p: string) => (existsSync(p) ? readFileSync(p, 'utf8').trim().replace(/^# .*\n/, '') : `_(not run: ${p})_`)
 const doc = `# How I evaluated Receipts
 
-Three questions, public human-labelled data, no training. Every table below is produced by a script in \`scripts/\`; per-item
-results (evidence sentences and model scores) are in \`docs/results/\`. The Wikipedia pages used are published as a release asset
-(\`wiki-cache.tar.gz\`) so the runs can be repeated on the same text.
+Public, human-labelled data; no training; every table below is produced by a script in \`scripts/\`, and per-item results
+(evidence sentences and model scores) are in \`docs/results/\`. Wikipedia text used: release asset \`wiki-cache.tar.gz\` (v0.1).
+"Plain checker" = the obvious baseline: take the most relevant sentence and the NLI model's raw label, no gate, no thresholds.
 
-## The short version (held-out numbers; misses included)
-- **Unrelated sentences:** the small NLI model alone calls them a contradiction 74.3 % of the time; Receipts 0.0 % (E1).
-- **Real ChatGPT answers (2,774 facts, 89 held-out topics):** when Receipts says **Backed**, humans agree 83.7 % (1,119 calls).
-  Balanced accuracy 68.0 % — **below my 70 % target**, and statistically tied with a plain "top sentence + raw model" checker
-  (67.1 %). "May conflict" is weak: 39.7 % of those calls match a human "not supported" label against a 37.0 % base rate, so the
-  app words it as a hint to read the sentence, never as "false".
-- **Where the gate earns its place:** when the subject's own article is not found (stress test), the plain checker based 216
-  conflicts on a sentence about someone or something else; Receipts based 0. With the gate switched off, Receipts' own false
-  conflicts on human-supported facts go from 13.9 % to 30.6 %.
-- **Another chatbot (InstructGPT, 30 test topics):** no better than the plain checker (68.6 % vs 71.4 % balanced accuracy, wide
-  intervals); more false conflicts on true facts (11.2 % vs 4.5 %). The gate does not make the small model a better judge of
-  true facts — it stops it from judging on the wrong evidence.
+## The short version
+- **Fresh held-out set (PerplexityAI biographies, 1,253 facts, never run before the settings were frozen):** balanced accuracy
+  **70.7 %** vs 66.6 % for the plain checker; when Receipts says **Backed**, humans agree **94.1 %**; false "May conflict" on
+  facts humans found true **3.6 %** vs **12.9 %** for the plain checker.
+- **ChatGPT test topics (2,774 facts; seen once with v1, re-scored with v2 — labelled as such):** 72.4 % vs 67.1 %; false
+  conflicts 3.5 % vs 11.9 %.
+- **Unrelated sentences (Symmetric FEVER, 712 pairs):** the small model alone calls them a contradiction 74.3 % of the time;
+  Receipts 0.3 %. Switching only the gate off brings it back to 48.2 %.
+- **Misses, stated plainly:** on whole sentences from raw answers (the app's own splitter and topic guess) Receipts backs few
+  sentences (balanced accuracy 57.1 %, tied with the plain checker); "May conflict" is only a hint (24–63 % precision depending
+  on the set); v1 missed my 70 % target on its held-out run (68.0 %), which is why revision 2 exists.
 
-## Protocol (what was fixed when)
-1. Dev/test split of FActScore topics by a hash of the name, decided before any result (2/5 dev, 3/5 test). I ran the first 40 of
-   the 68 dev topics (1,133 facts) to save time.
-2. Selection rule (SPEC §7) written before the final dev run and before any test run: on dev, keep settings with "Backed"
-   precision ≥ 85 % and "May conflict" precision ≥ 80 %, pick the best balanced accuracy; ship the smaller model unless the
-   larger one is ≥ 3 points better. No setting reached the 80 % conflict floor, so the relaxed rule (Backed ≥ 85 %) applied, and
-   the small model was kept (71.3 % vs 71.7 %).
-3. Settings frozen in \`web/config.json\` (commit "freeze settings … before the held-out test run"), then one test run.
-4. Disclosure: three biographies (Julia Faye, Carlos Santana, Marianne McAndrew) are UI samples I looked at while building — the
-   subject rule was motivated by a Julia Faye sentence. Two of them fall in the test split, so every test table is also shown
-   without them.
-5. After the test run I changed three things, none tuned on test: batching (speed only), skipping Wikipedia "(disambiguation)"
-   pages, and removing pronunciation/translation parentheses from lead sentences (found on the Eiffel Tower sample I wrote).
-   The E2 tables are from the code at the freeze commit; E3 ran with batching and the disambiguation filter.
+## History and protocol
+1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
+2. **v1** (SPEC §7): settings chosen on 40 ChatGPT dev topics, frozen, one test run → 68.0 %, a tie with the plain checker and
+   worse on false conflicts (13.9 % vs 11.9 %). Reported below unchanged.
+3. **v2** (SPEC §9, pushed to GitHub before running it): two decision options — a conflict may only come from the most relevant
+   gated sentence; disagreeing sources may abstain — and a selection rule that requires beating the plain checker on false
+   conflicts and conflict precision **on dev**. Then one run on a **fresh** set (PerplexityAI, 40 hash-chosen test topics).
+4. Disclosure: Julia Faye, Carlos Santana and Marianne McAndrew are UI samples I looked at while building; each table is also
+   shown without them. Post-freeze code changes (batching; skipping "(disambiguation)" pages; dropping pronunciation
+   parentheses) were not tuned on any test data; the PerplexityAI and sentence-level runs used the final code.
+5. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
+   Receipts; it is kept in the tables for the baselines only and is not used as evidence.
 
-## E1 — Does it read the evidence? (Symmetric FEVER v0.2, 712 test pairs)
-Each claim is checked with its real evidence sentence, and again with an **unrelated** sentence (another pair's evidence). Same
-model outputs, four decision rules. The small model on its own ("plain checker") calls the unrelated sentence a contradiction
-most of the time; even at the shipped 0.97 threshold, turning the gate off lets about half of them through as conflicts. With the
-gate: zero.
+## Revision 2 selection (dev)
+${inc('docs/results/v2-selection.md')}
 
+## E-fresh — PerplexityAI biographies, 40 hash-chosen test topics (v2, single run)
+${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall-PerplexityAI-v2.report.md')}
+
+## E2 — ChatGPT biographies, test topics
+**v2 settings (re-scored; these topics were seen in the v1 run):**
+${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall-v2-seen.report.md')}
+
+**v1 settings (the original single held-out run):**
+${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall.report.md')}
+
+## E-full — the app's whole path on raw ChatGPT answers (sentence level, 40 hash-chosen test topics, v2)
+Our splitter and topic guess, no hints. A sentence counts as "supported" only if every human atomic fact in it is supported, and
+as "Backed" only if every part we split it into is backed — strict on both sides.
+${inc('docs/results/e2-sentence-test-nli-deberta-v3-xsmall-v2.report.md')}
+
+## E1 — Unrelated sentences (Symmetric FEVER v0.2, 712 test pairs, Schuster et al. 2019)
+Each claim with its real evidence, and with another pair's evidence (a different subject). Same model outputs, four decision rules.
 **nli-deberta-v3-xsmall (shipped)**
 ${inc('docs/results/e1-test-nli-deberta-v3-xsmall-q8.md')}
 
 **DeBERTa-v3-base-mnli-fever-anli (larger, 244 MB vs 87 MB)**
 ${inc('docs/results/e1-test-DeBERTa-v3-base-mnli-fever-anli-q8.md')}
 
-What the gate costs: on this set it also drops many genuine refutations (the subject rule is strict), so coverage falls. That is
-the trade I chose for a tool that tells students "this may be wrong" — a false alarm about a true fact is the costly error.
-
-## E2 — Real ChatGPT answers (FActScore, Min et al., EMNLP 2023)
-Human-written atomic facts from ChatGPT biographies, each labelled supported / not supported against Wikipedia. Pipeline from
-retrieval onward: live Wikipedia search (disk-cached), pre-filter, embedding ranking, NLI, gate, verdict. The app's own sentence
-splitter is not used here (the human atomic facts are the inputs), so this measures retrieval + reading.
-Labels were made on 2023 Wikipedia; the pipeline reads today's, so some "errors" are the article changing.
-
-${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall.report.md')}
-
-Dev (used for choosing — optimistic by construction):
-${inc('docs/results/e2-fact-dev-nli-deberta-v3-xsmall.report.md')}
-
-## E3 — Does it carry over to another chatbot? (FActScore InstructGPT biographies, test topics, same frozen settings)
-${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall-InstructGPT.report.md')}
+## E3 — InstructGPT biographies (30 test topics in file order; seen in v1, re-scored with v2)
+${inc('docs/results/e2-fact-test-nli-deberta-v3-xsmall-InstructGPT-v2-seen.report.md')}
 
 ## What I did not do
 - No model training or fine-tuning; thresholds and gate settings are the only tuned numbers.
 - No labels of my own: all labels come from the datasets' authors.
-- No user study yet. The claims about students are a design goal, not a measured outcome.
+- No user study. The claims about students are a design goal, not a measured outcome.
 `
 writeFileSync('docs/eval.md', doc)
 console.log('docs/eval.md written')

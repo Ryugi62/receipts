@@ -30,8 +30,21 @@ const onProgress = (p: any) => {
   }
 }
 
+// Per-tab cache of Wikipedia responses (sessionStorage): re-checking the same answer is fast and sends no new requests.
+const cachedFetch = async (url: string) => {
+  try {
+    const hit = sessionStorage.getItem('w:' + url)
+    if (hit) return { ok: true, status: 200, json: async () => JSON.parse(hit) }
+  } catch {}
+  const r = await fetch(url)
+  if (!r.ok) return { ok: false, status: r.status, json: async () => ({}) }
+  const body = await r.text()
+  try { sessionStorage.setItem('w:' + url, body) } catch {}
+  return { ok: true, status: 200, json: async () => JSON.parse(body) }
+}
+
 const deps = {
-  source: new WikipediaSource({ searchPages: 2 }),
+  source: new WikipediaSource({ searchPages: 2, fetch: cachedFetch }),
   ranker: new TransformersRanker(undefined, onProgress),
   nli: new TransformersNli(config.model, 'q8', onProgress),
 }
@@ -67,7 +80,7 @@ function naiveNote(pt: PartResult): string {
     : s.mentionsSubject === false && nv.label === 'contradicted'
       ? 'that sentence is about someone or something else'
       : 'the model was not sure enough'
-  return `<p class="naive">A plain checker (top sentence + raw model) would say <b>${LABEL[nv.label]}</b> because of “${esc(s.sentence.slice(0, 160))}${s.sentence.length > 160 ? "…" : ""}” — Receipts set it aside: ${why}.</p>`
+  return `<p class="naive">⚖︎ A simpler checker would have said <b>${LABEL[nv.label]}</b>, trusting “${esc(s.sentence.slice(0, 160))}${s.sentence.length > 160 ? "…" : ""}” — Receipts set that sentence aside: ${why}.</p>`
 }
 
 function receiptHtml(label: string, receipts: { sentence: string; url: string; page: string }[]) {
@@ -102,6 +115,7 @@ function render(r: ClaimResult, el: HTMLElement) {
     ${partsHtml}`
 }
 
+let runs = 0
 btn.addEventListener('click', async () => {
   const answer = answerEl.value.trim()
   if (!answer) { answerEl.focus(); return }
@@ -130,6 +144,7 @@ btn.addEventListener('click', async () => {
     skeleton.remove()
     statusBox.hidden = true
     $('summary').hidden = false
+    $('summary').dataset.n = String(++runs)
     $('sum-big').textContent = `${counts.backed} of ${parts} claims backed`
     $('sum-line').textContent = `${counts.contradicted} may conflict with Wikipedia · ${counts.no_receipt} with no receipt — check those before you use them. (${all.length} sentences, ${((performance.now() - t0) / 1000).toFixed(0)} s)`
   } catch (e) {

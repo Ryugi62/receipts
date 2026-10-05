@@ -1,15 +1,13 @@
 [
- { "id": "h0", "hidden": true, "url": "app:", "actions": ["click:.chip[data-sample='Eiffel Tower']", "click:#check", "waitfor:#summary:not([hidden])", "click:.chip[data-sample='Marianne McAndrew']", "click:#check", "waitfor:#summary:not([hidden])", "goto:app:"] },
- { "id": "s01", "url": "docs/gallery/gallery.rendered.html#thumb",
-   "en": "Students paste AI answers into homework every day. The answers sound equally sure when they are right and when they are wrong. Receipts checks an AI answer claim by claim, in your browser, with no account and no key." },
- { "id": "s02", "url": "app:", "actions": ["zoom:1.15", "click:.chip[data-sample='Eiffel Tower']", "wait:500", "click:#check", "waitfor:#summary:not([hidden])", "scroll:#summary", "wait:600"],
-   "en": "Here is a paragraph where I planted one mistake. Receipts splits it into claims, searches Wikipedia for each one, and a small language model running in the browser reads the best sentences." },
- { "id": "s03", "url": "app:", "actions": ["scroll:.claim:nth-of-type(2)", "wait:500"],
-   "en": "The answer says the tower was completed in 1899. Receipts flags it: may conflict, and shows the sentence it relied on. Built from 1887 to 1889. You decide, with the receipt in front of you." },
- { "id": "s04", "url": "app:", "actions": ["goto:app:", "zoom:1.15", "click:.chip[data-sample='Marianne McAndrew']", "wait:400", "click:#check", "waitfor:#summary:not([hidden])", "scroll:.naive", "wait:600"],
-   "en": "This one is a real ChatGPT answer. A plain checker would take the top sentence, about her husband, and call the claim contradicted. Receipts sets that sentence aside, because it is not about this claim, and tells you to check it yourself." },
- { "id": "s05", "url": "docs/gallery/gallery.rendered.html#numbers",
-   "en": "I measured this on public, human-labelled data. On sentences that are not about the claim, the small model alone says contradiction seventy-four percent of the time. Receipts: zero. On real ChatGPT answers, when Receipts says backed, human annotators agree eighty-four percent of the time. Overall it only ties a plain checker, and I report that." },
- { "id": "s06", "url": "docs/gallery/gallery.rendered.html#arch",
-   "en": "No training anywhere: pretrained models, a relevance gate, settings chosen on development data and frozen before the held-out test. Receipts. Ask the AI for its receipts." }
+ { "id": "h0", "hidden": true, "url": "app:", "actions": ["zoom:1.15", "click:.chip[data-sample='Eiffel Tower']", "js:document.getElementById('check').click()", "waitfor:#summary[data-n='1']", "click:.chip[data-sample='Marianne McAndrew']", "js:document.getElementById('check').click()", "waitfor:#summary[data-n='2']", "js:window.scrollTo(0,0)"] },
+ { "id": "s01", "url": "app:", "actions": ["wait:300"],
+   "en": "Students paste AI answers into homework every day, and the answers sound equally sure when they are right and when they are wrong. Receipts checks an AI answer claim by claim, in your browser, with no account and no key." },
+ { "id": "s02", "url": "app:", "actions": ["scroll:#summary", "wait:2500", "scroll:.naive", "wait:600"],
+   "en": "This is a real ChatGPT answer from a public research dataset. Each claim gets a verdict and the Wikipedia sentence behind it. Here, a simpler checker would trust the top sentence, about her husband, and call the claim contradicted. Receipts sets that sentence aside and tells you to check it yourself." },
+ { "id": "s03", "url": "app:", "actions": ["js:window.scrollTo(0,0)", "click:.chip[data-sample='Eiffel Tower']", "wait:400", "js:document.getElementById('check').click()", "waitfor:#summary[data-n='3']", "scroll:.claim:nth-of-type(2)", "wait:500"],
+   "en": "In this paragraph I planted one mistake. The answer says the tower was completed in 1899. Receipts flags it, may conflict, and shows the sentence it relied on: built from 1887 to 1889. You decide, with the receipt in front of you." },
+ { "id": "s04", "url": "docs/gallery/gallery.rendered.html#numbers",
+   "en": "I measured this on public, human-labelled data, with settings frozen before the test. On sentences that are not about the claim, the small model alone says contradiction seventy-four percent of the time; Receipts almost never. On a fresh set of chatbot answers, when Receipts says backed, people agree ninety-four percent of the time, and it raises false alarms on true facts less than a quarter as often as a simpler checker." },
+ { "id": "s05", "url": "docs/gallery/gallery.rendered.html#arch",
+   "en": "No training anywhere: pretrained models, a relevance gate, and settings chosen on development data. Receipts. Ask the AI for its receipts." }
 ]

@@ -57,7 +57,7 @@ if (scenes.some((s) => s.passkey)) {
   await cdp.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true } })
 }
 const CAP = `#cd-cap{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:rgba(10,14,20,.86);color:#fff;padding:10px 56px 12px;
-font:600 20px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;pointer-events:none}.cta{bottom:58px!important}.cd-click{outline:4px solid #ffb020!important;outline-offset:3px}`
+font:600 24px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;pointer-events:none}.cta{bottom:58px!important}.cd-click{outline:4px solid #ffb020!important;outline-offset:3px}`
 async function caption(text) {
   await page.evaluate(({ css, text }) => {
     if (!document.getElementById('cd-cap-style')) { const st = document.createElement('style'); st.id = 'cd-cap-style'; st.textContent = css; document.head.appendChild(st) }
@@ -77,6 +77,7 @@ async function act(s) {
     else if (kind === 'fill') { const [sel, ...v] = arg.split('='); await page.locator(sel).first().fill(v.join('=')) }
     else if (kind === 'goto') { await page.goto(abs(arg)); current = abs(arg) }
     else if (kind === 'zoom') await page.evaluate((z) => { document.body.style.zoom = z }, arg)
+    else if (kind === 'js') await page.evaluate(arg)
   }
 }
 // hidden set-up scenes run first and are trimmed from the video (no loading states on camera)
@@ -112,6 +113,7 @@ for (const s of scenes) {
     else if (kind === 'fill') { const [sel, ...v] = arg.split('='); await page.locator(sel).first().fill(v.join('=')) }
     else if (kind === 'goto') { await page.goto(abs(arg)); current = abs(arg) }
     else if (kind === 'zoom') await page.evaluate((z) => { document.body.style.zoom = z }, arg)
+    else if (kind === 'js') await page.evaluate(arg)
     else if (kind === 'fillenv') { const [sel, name] = arg.split('='); await page.locator(sel).first().fill(process.env[name] ?? '') } // secrets are typed into password fields only
     else if (kind === 'select') await page.evaluate((needle) => {
       // highlight the key sentence of the pasted email so viewers see what the reader saw

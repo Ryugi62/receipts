@@ -1,8 +1,8 @@
 {
  "lines": [
-  "Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>74.3%</b> of the time; Receipts: <b>0.0%</b> (712 pairs, Symmetric FEVER).",
-  "<b>Real ChatGPT answers</b> with human labels (FActScore; 2,774 facts on 89 held-out topics): when Receipts says <b>Backed</b>, humans agree <b>83.7%</b> (1119 facts). Everything else is left for you to check. Overall it is about as accurate as a plain \"top sentence + raw model\" checker (balanced accuracy 68.0% vs 67.1%).",
-  "When the right article is <b>not</b> found (stress test: other pages only), the plain checker based <b>216</b> conflicts on a sentence about someone or something else; Receipts: <b>0</b>.",
-  "\"May conflict\" is a hint, not a verdict: on held-out data only 39.7% of those calls matched a human \"not supported\" label (base rate 37.0%)."
+  "Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>74.3%</b> of the time; Receipts: <b>0.3%</b> (712 pairs, Symmetric FEVER).",
+  "On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts): when Receipts says <b>Backed</b>, humans agree <b>94.1%</b>; it raises a false \"may conflict\" on true facts <b>3.6%</b> of the time, vs <b>12.9%</b> for a simpler top-sentence checker.",
+  "Balanced accuracy 70.7% vs 66.6% for that simpler checker. Settings were chosen on separate development topics and frozen before this run.",
+  "Limits: \"No receipt\" is common (about half of all facts), and \"May conflict\" is a hint to read the sentence, not a verdict."
  ]
 }

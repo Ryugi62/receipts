@@ -8,10 +8,10 @@ each one, and a language-inference model **running in your browser** marks every
 [ML Empowerment Build Challenge 3.0](https://ml-build-challenge-3.devpost.com/)
 
 <!-- NUMBERS -->
-- Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.0%** (712 pairs, Symmetric FEVER).
-- **Real ChatGPT answers** with human labels (FActScore; 2,774 facts on 89 held-out topics): when Receipts says **Backed**, humans agree **83.7%** (1119 facts). Everything else is left for you to check. Overall it is about as accurate as a plain "top sentence + raw model" checker (balanced accuracy 68.0% vs 67.1%).
-- When the right article is **not** found (stress test: other pages only), the plain checker based **216** conflicts on a sentence about someone or something else; Receipts: **0**.
-- "May conflict" is a hint, not a verdict: on held-out data only 39.7% of those calls matched a human "not supported" label (base rate 37.0%).
+- Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.3%** (712 pairs, Symmetric FEVER).
+- On a **fresh held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts): when Receipts says **Backed**, humans agree **94.1%**; it raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker.
+- Balanced accuracy 70.7% vs 66.6% for that simpler checker. Settings were chosen on separate development topics and frozen before this run.
+- Limits: "No receipt" is common (about half of all facts), and "May conflict" is a hint to read the sentence, not a verdict.
 - Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)
 <!-- /NUMBERS -->
 
@@ -36,11 +36,11 @@ model" checker would have answered differently, the app shows that answer and wh
 3. **Rank**: a cheap word-overlap pre-filter keeps 40 sentences, then `all-MiniLM-L6-v2` embeddings pick the top 5.
 4. **Infer**: `nli-deberta-v3-xsmall` (8-bit ONNX, transformers.js, in the browser, one batched pass) scores backs /
    contradicts / neutral.
-5. **Gate + decide**: only gated sentences may decide; a conflict needs a sentence about the same subject; sources that
-   disagree are shown side by side.
+5. **Gate + decide**: only gated sentences may decide; a conflict must come from the single most relevant gated sentence and
+   be about the same subject; sources that disagree are shown side by side.
 
 No training anywhere — pretrained models only. The only tuned numbers (relevance bar, two thresholds, subject rules) were
-chosen on development topics with a rule written down before the final dev run (SPEC §7), and frozen before the held-out run.
+chosen on development topics with rules pushed before each run (SPEC §7, §9), and frozen before the held-out runs.
 
 ```
 src/domain        claims, gate, verdict   (pure, no I/O)
@@ -62,8 +62,8 @@ npx tsx scripts/e2-report.ts --split test                                 # base
 
 ## Limits (read this)
 - Wikipedia is not the truth, and **"no receipt" does not mean false** — it means "check this one yourself".
-- "May conflict" is a prompt to read the sentence, not a verdict: on development data only about half of these calls matched a
-  human "not supported" label. About half of the facts humans found supported still get "No receipt" — the tool is cautious.
+- "May conflict" is a prompt to read the sentence, not a verdict: its precision ranged from 24 % to 63 % across the held-out
+  sets. Many true facts still get "No receipt" — the tool is cautious, and on whole raw sentences it backs few (docs/eval.md, E-full).
 - English only. Works best for people, places, events and other things with a Wikipedia article.
 - The splitter is rule-based; unusual sentences are checked whole, which often ends in "no receipt".
 - The human labels I evaluate against (FActScore) were made against a 2023 Wikipedia snapshot; the app reads today's
@@ -71,7 +71,7 @@ npx tsx scripts/e2-report.ts --split test                                 # base
 
 ## Data and credits
 - Symmetric FEVER v0.2 — Schuster et al., *Towards Debiasing Fact Verification Models*, EMNLP 2019 (CC BY-SA 3.0).
-- FActScore labelled ChatGPT biographies — Min et al., *FActScore*, EMNLP 2023 (MIT).
+- FActScore labelled ChatGPT / InstructGPT / PerplexityAI biographies — Min et al., *FActScore*, EMNLP 2023 (MIT).
 - Models: `Xenova/nli-deberta-v3-xsmall` (from cross-encoder/nli-deberta-v3-xsmall), `Xenova/all-MiniLM-L6-v2`.
 - Text from Wikipedia (CC BY-SA). Built solo during the challenge (first commit 2026-10-05) with an AI coding assistant;
   MIT licence.

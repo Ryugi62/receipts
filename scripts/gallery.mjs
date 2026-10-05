@@ -11,8 +11,8 @@ const cell = (name) => naive.split('\n').find((l) => l.startsWith(`| ${name}`)).
 const raw = cell('plain checker')[8].match(/= ([\d.]+%)/)[1]
 const gated = cell('Receipts as shipped')[8].match(/= ([\d.]+%)/)[1]
 const nums = JSON.parse(readFileSync('web/numbers.json', 'utf8')).lines
-const e2line = (nums.find((l) => l.includes('Real ChatGPT answers')) ?? '').replace(/<[^>]+>/g, '')
-const stress = (nums.find((l) => l.includes('stress test')) ?? '').replace(/<[^>]+>/g, '')
+const e2line = (nums.find((l) => l.includes('fresh held-out')) ?? '').replace(/<[^>]+>/g, '')
+const stress = (nums.find((l) => l.includes('Balanced accuracy')) ?? '').replace(/<[^>]+>/g, '')
 const html = readFileSync('docs/gallery/gallery.html', 'utf8').replace('{{RAW}}', raw).replace('{{GATED}}', gated).replace('{{E2LINE}}', e2line).replace('{{STRESS}}', stress)
 writeFileSync('docs/gallery/gallery.rendered.html', html)
 

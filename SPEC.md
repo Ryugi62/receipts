@@ -40,9 +40,10 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
 | Evidence sentence | One sentence from a source page, with relevance score | `EvidenceSentence` |
 | Relevance gate | Minimum relevance (embedding similarity + entity overlap) before a sentence may decide a verdict | `passesRelevanceGate()` |
 | Inference | NLI probabilities (entail / contradict / neutral) for one claim–sentence pair | `Inference` |
-| Verdict | `backed` / `contradicted` / `no_receipt` plus the receipt sentence | `Verdict`, `decideVerdict()` |
+| Verdict | `backed` / `contradicted` (shown as "May conflict") / `no_receipt` plus the receipt sentence | `Verdict`, `decideVerdict()` |
 | Receipt | The evidence sentence (and link) that decided a verdict | `Receipt` |
-| Swap test | Re-running a claim against an unrelated sentence to show the verdict becomes `no_receipt` | `swapTest()` |
+| Swap test | Re-running a claim against an unrelated sentence to show the verdict becomes `no_receipt` (evaluation E1) | `swapTest()` |
+| Plain checker | Baseline: most relevant sentence + raw NLI label, no gate | `naiveVerdict()` |
 
 ## 4. Behaviour (Given / When / Then)
 1. Given an answer with 3 sentences, one using "She", When split, Then 3+ claims and the pronoun is replaced by the topic.
@@ -52,7 +53,7 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
 5. Given both entail ≥ τe and contradict ≥ τc on different gated sentences, Then `backed` is not shown alone: verdict `contradicted`
    with both receipts listed ("sources disagree").
 6. Given the Wikipedia adapter, When a claim is checked, Then the request URL contains only the claim/topic search terms, never the full answer.
-7. Given the swap test on a backed claim, When run, Then the UI shows the new verdict next to the original.
+7. Given a claim where the plain checker's verdict differs from Receipts', When shown, Then the UI shows the plain verdict, its sentence, and why Receipts set it aside.
 
 ## 5. Architecture (Clean)
 `src/domain` (claims, gate, verdict — no I/O) ← `src/application` (checkAnswer use case, ports: EvidenceSource, Ranker, NliModel)

@@ -1,4 +1,4 @@
-1280px: 2 of 4 claims backed in 22 s — No receipt | May conflict | Backed | Backed
-1280px plain-checker notes: 0
-390px: 2 of 4 claims backed in 21 s — No receipt | May conflict | Backed | Backed
-390px plain-checker notes: 0
+1280px: 1 of 6 claims backed in 35 s — No receipt | Backed | No receipt | No receipt | No receipt | No receipt
+1280px plain-checker notes: 1 — e.g. ⚖︎ A simpler checker would have said May conflict, trusting “McAndrew married actor Stewart Moss in 1968, remaining married until his death in 2017.” — Receipts set that sentence aside: the model was not sure enough.
+390px: 1 of 6 claims backed in 35 s — No receipt | Backed | No receipt | No receipt | No receipt | No receipt
+390px plain-checker notes: 1 — e.g. ⚖︎ A simpler checker would have said May conflict, trusting “McAndrew married actor Stewart Moss in 1968, remaining married until his death in 2017.” — Receipts set that sentence aside: the model was not sure enough.
