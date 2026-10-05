@@ -159,3 +159,13 @@ and the triage view; per-item results committed. Not a selection run: nothing is
 - **Result (run once, 2026-10-06):** 355 claims — balanced accuracy 75.5 % [70.6–79.3] vs plain checker 68.4 % (paired
   +7.0 points [4.6, 9.5]); "Backed" precision 89.1 % (n=92); false "May conflict" on SUPPORTS 5.4 % vs 18.4 %; "May conflict"
   precision 88.1 % (n=67) but it names 28.4 % of REFUTES (plain: 70.7 %). docs/results/e4-report.md.
+
+## 13. Revision 4 — a better splitter for whole paragraphs (pre-registered 2026-10-06, pushed before any dev run)
+Why: every judge (and H1) points at the same weak spot: on raw paragraphs Receipts ties the plain checker and backs 13 % of the
+sentences humans support. Hypothesis: long ChatGPT sentences stay compound ("an American actress, singer and dancer known for
+A, B and C"), so no single Wikipedia sentence entails the whole part.
+- Rules are written from **dev** sentences only (ChatGPT dev topics, the same 40 as the v1–v3 selection).
+- **Ship only if**, on a dev sentence-level run with the new splitter, balanced accuracy is ≥ 2.0 points above the current
+  splitter on the same dev topics and "Backed" precision is no more than 3 points lower. Decision rules and thresholds stay frozen.
+- **Held-out (H2s), run once after the choice is pushed:** PerplexityAI test topics at sentence level (40 hash-chosen, never run
+  at sentence level), new vs current splitter vs plain checker, paired topic bootstrap. Reported whatever it shows.
