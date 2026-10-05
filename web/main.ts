@@ -54,7 +54,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
   }),
 )
 
-const LABEL: Record<string, string> = { backed: 'Backed', contradicted: 'Contradicted', no_receipt: 'No receipt' }
+const LABEL: Record<string, string> = { backed: 'Backed', contradicted: 'May conflict', no_receipt: 'No receipt' }
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const p = (x: number) => `${Math.round(100 * x)}%`
 
@@ -145,7 +145,7 @@ btn.addEventListener('click', async () => {
     statusBox.hidden = true
     $('summary').hidden = false
     $('sum-big').textContent = `${counts.backed} of ${parts} claims backed`
-    $('sum-line').textContent = `${counts.contradicted} contradicted · ${counts.no_receipt} with no receipt — check those before you use them. (${all.length} sentences, ${((performance.now() - t0) / 1000).toFixed(0)} s)`
+    $('sum-line').textContent = `${counts.contradicted} may conflict with Wikipedia · ${counts.no_receipt} with no receipt — check those before you use them. (${all.length} sentences, ${((performance.now() - t0) / 1000).toFixed(0)} s)`
   } catch (e) {
     statusText.textContent = `Something went wrong: ${(e as Error).message}. Wikipedia may be busy — try again in a minute.`
   } finally {

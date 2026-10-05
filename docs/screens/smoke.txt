@@ -1,4 +1,4 @@
-1280px: 0 of 6 claims backed in 56 s — Partly backed · 2/4 | Backed | No receipt | No receipt | Backed | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | Contradicted
-1280px swap: Given “The Amazon River flows through Peru, Colombia and Brazil before reaching the Atlantic Ocean.” → raw model: backs 0%, contradicts 0% · Receipts: No receipt ✓ it read the evidence
-390px: 0 of 6 claims backed in 50 s — Partly backed · 2/4 | Backed | No receipt | No receipt | Backed | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | No receipt | Contradicted
-390px swap: Given “The Amazon River flows through Peru, Colombia and Brazil before reaching the Atlantic Ocean.” → raw model: backs 0%, contradicts 0% · Receipts: No receipt ✓ it read the evidence
+1280px: 3 of 4 claims backed in 23 s — Backed | May conflict | Backed | Backed
+1280px swap: Given “The Amazon River flows through Peru, Colombia and Brazil before reaching the Atlantic Ocean.” → raw model: backs 0%, contradicts 10% · Receipts: No receipt ✓ it read the evidence
+390px: 3 of 4 claims backed in 22 s — Backed | May conflict | Backed | Backed
+390px swap: Given “The Amazon River flows through Peru, Colombia and Brazil before reaching the Atlantic Ocean.” → raw model: backs 0%, contradicts 10% · Receipts: No receipt ✓ it read the evidence
