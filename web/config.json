@@ -1,1 +1,1 @@
-{ "model": "Xenova/nli-deberta-v3-xsmall", "gate": { "minSimilarity": 0.3, "minSharedTokens": 1, "ignoreTopicTokens": false }, "thresholds": { "entail": 0.6, "contradict": 0.7 }, "chosenOn": "placeholder until E2 dev sweep" }
+{ "model": "Xenova/DeBERTa-v3-base-mnli-fever-anli", "gate": { "minSimilarity": 0.5, "minSharedTokens": 0, "ignoreTopicTokens": false }, "thresholds": { "entail": 0.9, "contradict": 0.97, "contradictNeedsSubject": true, "entailNeedsSubject": true }, "chosenOn": "interim dev sweep (189 facts) — replaced by the final dev choice" }

@@ -58,3 +58,21 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
 `src/domain` (claims, gate, verdict — no I/O) ← `src/application` (checkAnswer use case, ports: EvidenceSource, Ranker, NliModel)
 ← `src/adapters` (wikipedia, transformers NLI, transformers embeddings, rule claim splitter) ← `web/` + `scripts/` (infrastructure).
 `scripts/check-layers.mjs` fails on reverse imports.
+
+## 6. UI acceptance (Toss-style checklist, measured by `scripts/capture.mjs`)
+1. Mobile first: 390 px and 1280 px captures, horizontal overflow 0 (script fails otherwise).
+2. One question per screen: one text box (+ optional topic) and one primary action.
+3. Type: headline 30 px bold, body 16 px, secondary 13 px.
+4. Spacing ≥ 24 px between sections, cards radius ≥ 16 px, no heavy shadows.
+5. Fixed bottom CTA "Check the receipts", full width, 56 px.
+6. Number first: the result starts with "N of M claims backed" (34 px).
+7. Evidence folded: per-claim score table inside `<details>` (closed by default).
+8. Microcopy: plain words ("No receipt — worth checking yourself"), no jargon without a one-line gloss.
+9. Colour: white background, one brand blue (#3182F6) + three state colours, dark mode supported.
+10. Dependencies: system fonts only; the only network calls are model files (Hugging Face, first visit) and Wikipedia.
+
+## 7. Pre-registered selection (written before the final dev run, 2026-10-05)
+- Settings per model: on dev only, keep settings whose "Backed" precision ≥ 85 % and "Contradicted" precision ≥ 80 % (≥ 20
+  contradicted calls); pick the best balanced accuracy. If none qualifies, relax to Backed ≥ 85 % and say so.
+- Model: ship the model whose chosen setting meets both floors; if both do, the smaller one unless the larger is ≥ 3 points
+  better in balanced accuracy on dev. The held-out test run happens once, after this choice is committed.

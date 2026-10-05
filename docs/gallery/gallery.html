@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Receipts gallery</title>
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #191f28; background: #fff; }
+  section { width: 1280px; height: 720px; box-sizing: border-box; padding: 64px 72px; display: none; position: relative; }
+  section:target { display: block; }
+  .eyebrow { color: #3182f6; font-weight: 800; font-size: 22px; margin: 0 0 12px; }
+  h1 { font-size: 56px; line-height: 1.1; margin: 0 0 20px; }
+  h2 { font-size: 40px; margin: 0 0 28px; }
+  p { font-size: 24px; color: #4e5968; line-height: 1.45; margin: 0 0 12px; }
+  .flow { display: flex; gap: 14px; align-items: stretch; margin-top: 36px; }
+  .box { flex: 1; border: 2px solid #e5e8eb; border-radius: 18px; padding: 18px; background: #f9fafb; }
+  .box b { display: block; font-size: 22px; margin-bottom: 8px; }
+  .box span { font-size: 17px; color: #4e5968; line-height: 1.4; display: block; }
+  .box.gate { border-color: #3182f6; background: #eef5ff; }
+  .arrow { align-self: center; font-size: 28px; color: #8b95a1; }
+  .layers { margin-top: 30px; font: 18px/1.6 ui-monospace, Menlo, monospace; color: #4e5968; }
+  .big { font-size: 96px; font-weight: 900; line-height: 1; margin: 0; }
+  .row { display: flex; gap: 40px; margin-top: 36px; }
+  .stat { flex: 1; border-radius: 22px; padding: 28px; }
+  .bad { background: #fdecec; } .bad .big { color: #d63c3c; }
+  .good { background: #e8f7f0; } .good .big { color: #0a8f5a; }
+  .stat p { font-size: 22px; color: #333d4b; }
+  .src { position: absolute; bottom: 40px; left: 72px; right: 72px; font-size: 16px; color: #8b95a1; }
+  .pill { display: inline-block; font-weight: 800; font-size: 26px; padding: 8px 20px; border-radius: 999px; margin-right: 10px; }
+  .pb { background: #e8f7f0; color: #0a8f5a; } .pc { background: #fdecec; color: #d63c3c; } .pn { background: #f2f4f6; color: #6b7684; }
+  blockquote { margin: 24px 0 0; padding: 18px 22px; border-left: 6px solid #d63c3c; background: #f9fafb; border-radius: 12px; font-size: 26px; }
+</style></head>
+<body>
+<section id="thumb">
+  <p class="eyebrow">Receipts</p>
+  <h1>Ask an AI answer<br>for its receipts.</h1>
+  <p>Every claim checked against Wikipedia, in your browser — with the sentence behind each verdict.</p>
+  <div style="margin-top:28px"><span class="pill pb">Backed</span><span class="pill pc">Contradicted</span><span class="pill pn">No receipt</span></div>
+  <blockquote>ChatGPT: “born September 24, <b>1893</b>” &nbsp;→&nbsp; Wikipedia: “(September 24, <b>1892</b> – April 6, 1966)”</blockquote>
+  <p class="src">No account · no API key · no training · open source (MIT)</p>
+</section>
+<section id="numbers">
+  <h2>It reads the evidence — measured, not claimed</h2>
+  <div class="row">
+    <div class="stat bad"><p class="big">{{RAW}}</p><p>of unrelated sentences called a <b>“contradiction”</b> by the raw model (nli-deberta-v3-xsmall)</p></div>
+    <div class="stat good"><p class="big">{{GATED}}</p><p>answered <b>“no receipt”</b> once Receipts’ relevance gate is in front of it</p></div>
+  </div>
+  <p style="margin-top:28px">{{E2LINE}}</p>
+  <p class="src">Symmetric FEVER v0.2 test, 712 pairs (Schuster et al., EMNLP 2019) · FActScore ChatGPT biographies with human labels (Min et al., EMNLP 2023) · settings chosen on dev topics, frozen before the held-out run · github.com/Ryugi62/receipts/docs/eval.md</p>
+</section>
+<section id="arch">
+  <h2>How it works — all in the browser</h2>
+  <div class="flow">
+    <div class="box"><b>1 · Split</b><span>sentences → atomic claims; “she” → the topic</span></div><div class="arrow">→</div>
+    <div class="box"><b>2 · Retrieve</b><span>Wikipedia search per claim; prose only</span></div><div class="arrow">→</div>
+    <div class="box"><b>3 · Rank</b><span>word pre-filter (40) → MiniLM embeddings (top 5)</span></div><div class="arrow">→</div>
+    <div class="box"><b>4 · Infer</b><span>DeBERTa NLI: backs / contradicts / neutral</span></div><div class="arrow">→</div>
+    <div class="box gate"><b>5 · Gate</b><span>close in meaning + shared word + same subject — or no verdict</span></div>
+  </div>
+  <div class="layers">src/domain — claims · gate · verdict (pure)<br>src/application — checkAnswer + ports<br>src/adapters — Wikipedia · transformers.js<br>web/ · scripts/ — UI · evaluation · captures</div>
+  <p class="src">transformers.js (ONNX, WebAssembly) · Xenova/nli-deberta-v3-xsmall · Xenova/all-MiniLM-L6-v2 · MediaWiki API · TypeScript · Vite · Vitest · Playwright</p>
+</section>
+</body></html>

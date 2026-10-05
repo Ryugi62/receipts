@@ -127,6 +127,7 @@ btn.addEventListener('click', async () => {
   const t0 = performance.now()
   const counts = { backed: 0, contradicted: 0, no_receipt: 0 }
   let n = 0
+  let parts = 0
   try {
     const skeleton = document.createElement('div')
     skeleton.className = 'claim skeleton'
@@ -135,15 +136,16 @@ btn.addEventListener('click', async () => {
       const el = document.createElement('div')
       results.insertBefore(el, skeleton)
       render(r, el)
-      counts[r.verdict.label]++
+      for (const pt of r.parts) counts[pt.verdict.label]++
+      parts += r.parts.length
       n++
       statusText.textContent = `Checked ${n} claim${n > 1 ? 's' : ''}…`
     })
     skeleton.remove()
     statusBox.hidden = true
     $('summary').hidden = false
-    $('sum-big').textContent = `${counts.backed} of ${all.length} claims backed`
-    $('sum-line').textContent = `${counts.contradicted} contradicted · ${counts.no_receipt} with no receipt — check those before you use them. (${((performance.now() - t0) / 1000).toFixed(0)} s)`
+    $('sum-big').textContent = `${counts.backed} of ${parts} claims backed`
+    $('sum-line').textContent = `${counts.contradicted} contradicted · ${counts.no_receipt} with no receipt — check those before you use them. (${all.length} sentences, ${((performance.now() - t0) / 1000).toFixed(0)} s)`
   } catch (e) {
     statusText.textContent = `Something went wrong: ${(e as Error).message}. Wikipedia may be busy — try again in a minute.`
   } finally {

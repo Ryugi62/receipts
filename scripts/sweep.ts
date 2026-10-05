@@ -61,7 +61,16 @@ for (const minSimilarity of [0.2, 0.3, 0.4, 0.5])
               grid.push({ gate: { minSimilarity, minSharedTokens, ignoreTopicTokens }, t: { entail, contradict, contradictNeedsSubject, entailNeedsSubject } })
 
 const dev = load('dev')
-const scored = grid.map((g) => ({ ...g, m: metrics(dev, g.gate, g.t) })).sort((a, b) => b.m.bal - a.m.bal)
+// Selection rule (fixed before the final dev run): the labels shown to students must be trustworthy first —
+// on dev, "Backed" precision ≥ 85 % and "Contradicted" precision ≥ 80 % (with ≥ 20 contradicted calls); among those,
+// the best balanced accuracy. If nothing qualifies, relax to Backed ≥ 85 % only and say so.
+const all = grid.map((g) => ({ ...g, m: metrics(dev, g.gate, g.t) }))
+const prec = (k: number, n: number) => (n ? k / n : 0)
+const strict = all.filter((x) => prec(x.m.backedS, x.m.backed) >= 0.85 && x.m.contra >= 20 && prec(x.m.contraNS, x.m.contra) >= 0.8)
+const relaxed = all.filter((x) => prec(x.m.backedS, x.m.backed) >= 0.85)
+const pool = strict.length ? strict : relaxed.length ? relaxed : all
+const rule = strict.length ? 'Backed ≥85 % and Contradicted ≥80 % precision' : relaxed.length ? 'Backed ≥85 % precision (no setting reached Contradicted ≥80 %)' : 'no precision floor reachable'
+const scored = [...pool].sort((a, b) => b.m.bal - a.m.bal)
 const best = scored[0]
 const fmt = (name: string, m: ReturnType<typeof metrics>) => [
   `## ${name} — ${m.n} claims, ${m.topics} topics`,
@@ -72,9 +81,9 @@ const fmt = (name: string, m: ReturnType<typeof metrics>) => [
   `- Share of ChatGPT facts supported (FActScore-style, mean over topics): human ${pct(m.human)} · Receipts ${pct(m.est)} · mean |difference| per biography ${pct(m.mae)}`,
 ].join('\n')
 let report = `# E2 FActScore ChatGPT biographies — ${level} level — model ${model}\n` +
-  `Chosen on DEV (best balanced accuracy of ${grid.length} settings): gate ${JSON.stringify(best.gate)}, thresholds ${JSON.stringify(best.t)}\n\n` +
+  `Chosen on DEV — rule: ${rule}; best balanced accuracy among ${pool.length} of ${grid.length} settings: gate ${JSON.stringify(best.gate)}, thresholds ${JSON.stringify(best.t)}\n\n` +
   fmt('DEV (used for choosing)', best.m)
-const defaults = scored.find((s) => s.gate.minSimilarity === 0.3 && s.gate.minSharedTokens === 1 && !s.gate.ignoreTopicTokens && s.t.entail === 0.6 && s.t.contradict === 0.7)
+const defaults = all.find((s) => s.gate.minSimilarity === 0.3 && s.gate.minSharedTokens === 1 && !s.gate.ignoreTopicTokens && s.t.entail === 0.6 && s.t.contradict === 0.7)
 if (defaults) report += `\n\n(For reference, a hand-picked default ${JSON.stringify(defaults.gate)} ${JSON.stringify(defaults.t)} on DEV: balanced ${pct(defaults.m.bal)})`
 if (apply && existsSync(`docs/results/e2-${level}-${apply}-${model}.jsonl`)) {
   report += '\n\n' + fmt(`${apply.toUpperCase()} (held out — settings frozen from DEV)`, metrics(load(apply), best.gate, best.t))
