@@ -169,3 +169,8 @@ A, B and C"), so no single Wikipedia sentence entails the whole part.
   splitter on the same dev topics and "Backed" precision is no more than 3 points lower. Decision rules and thresholds stay frozen.
 - **Held-out (H2s), run once after the choice is pushed:** PerplexityAI test topics at sentence level (40 hash-chosen, never run
   at sentence level), new vs current splitter vs plain checker, paired topic bootstrap. Reported whatever it shows.
+- **Result (dev, 2026-10-06):** 285 sentences, 40 dev topics — new splitter 59.5 % vs current 59.2 % balanced (+0.3 points, bar
+  +2.0); "Backed" precision 69.6 % vs 66.7 %; it still backs 22.2 % of human-supported sentences either way. **Not shipped**
+  (`splitClaims(…, { v4: true })` stays off by default, rules and tests kept). H2s is therefore not run: there is nothing new to test.
+  Reading: splitting a long sentence into more parts does not help when every part must be backed — the gap is retrieval and
+  the model, not the splitter.

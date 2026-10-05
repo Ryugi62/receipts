@@ -28,6 +28,8 @@ Public, human-labelled data; no training; every table below is produced by a scr
 - **On a slowed laptop** (Chrome CPU throttled 4×, fresh profile, scripts/slow-laptop.mjs): first result 21 s and all four claims
   44 s on the first visit including the model download; a six-sentence answer 66 s once the models are cached.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
+- **Revision 4 missed its bar too** (SPEC §13): a richer rule-based splitter for whole paragraphs (role lists, "including A, B
+  and C", ", where he…", "born on…") gained +0.3 points on dev sentences against a +2.0 bar, so it is off by default.
 - **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
   reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
   fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
@@ -132,6 +134,25 @@ Decision (ship only if ≥ 1.0 point above v2, top 5, raw evidence): **keep v2 s
  "note": "fresh profile; network = this machine’s connection; laptop CPU slowed with Emulation.setCPUThrottlingRate"
 }
 ```
+
+## Revision 4 — splitter for whole paragraphs (dev only; not shipped)
+### Revision 4 dev — sentence level, ChatGPT dev topics, splitter v4 (new rules) — 285 items, 40 topics, 74.7% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 59.5% [55.2%–64.7%] | — | 69.6% (n=23) | 22.2% | 4.2% | 8.1% | 96.7% | 91.9% | 10.8% | 88.5% (n=26) |
+| plain checker (top sentence + raw NLI label) | 57.2% [53.6%–60.8%] | 2.3 pts [-1.1, 6.8] | 70.6% (n=17) | 16.7% | 5.6% | 6.0% | 97.7% | 94.0% | 21.6% | 92.0% (n=50) |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+### Revision 4 dev — sentence level, ChatGPT dev topics, splitter current — 285 items, 40 topics, 74.7% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 59.2% [54.6%–65.7%] | — | 66.7% (n=24) | 22.2% | 1.4% | 8.4% | 96.2% | 91.6% | 10.3% | 95.7% (n=23) |
+| plain checker (top sentence + raw NLI label) | 56.9% [52.8%–61.0%] | 2.3 pts [-0.7, 6.3] | 66.7% (n=18) | 16.7% | 2.8% | 6.3% | 97.2% | 93.7% | 18.8% | 95.2% (n=42) |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
 
 ## Triage view (share you can skip vs errors left in the "check" pile)
 ### Triage view — fresh held-out PerplexityAI (v2 run; code before the v3 bug fixes) — 1253 items, 35 topics, 15.7% not supported by humans

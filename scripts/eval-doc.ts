@@ -33,6 +33,8 @@ Public, human-labelled data; no training; every table below is produced by a scr
 - **On a slowed laptop** (Chrome CPU throttled 4×, fresh profile, scripts/slow-laptop.mjs): first result 21 s and all four claims
   44 s on the first visit including the model download; a six-sentence answer 66 s once the models are cached.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
+- **Revision 4 missed its bar too** (SPEC §13): a richer rule-based splitter for whole paragraphs (role lists, "including A, B
+  and C", ", where he…", "born on…") gained +0.3 points on dev sentences against a +2.0 bar, so it is off by default.
 - **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
   reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
   fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
@@ -76,6 +78,11 @@ ${inc('docs/results/e4-report.md')}
 \`\`\`
 ${existsSync('docs/results/slow-laptop-4x.json') ? readFileSync('docs/results/slow-laptop-4x.json', 'utf8').trim() : ''}
 \`\`\`
+
+## Revision 4 — splitter for whole paragraphs (dev only; not shipped)
+${inc('docs/results/v4-dev-split4.md')}
+
+${inc('docs/results/v4-dev-split0.md')}
 
 ## Triage view (share you can skip vs errors left in the "check" pile)
 ${inc('docs/results/triage-perplexity.md')}

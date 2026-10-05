@@ -1,0 +1,9 @@
+{
+  "split": "dev",
+  "level": "sentence",
+  "topics": 40,
+  "items": 285,
+  "model": "Xenova/nli-deberta-v3-xsmall",
+  "runSeconds": 325,
+  "when": "2026-10-05T18:26:24.703Z"
+}

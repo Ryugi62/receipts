@@ -78,7 +78,7 @@ for (const d of mine) {
       const labs = (a['human-atomic-facts'] ?? []).map((f: any) => f.label).filter((l: string) => l === 'S' || l === 'NS')
       if (labs.length) gold.set(norm(a.text), labs.includes('NS') ? 'NS' : 'S')
     }
-    const claims = splitClaims(d.output)
+    const claims = splitClaims(d.output, undefined, { v4: arg('splitter', '') === 'v4' })
     for (const c of claims) {
       const g = gold.get(norm(c.original))
       if (!g) continue

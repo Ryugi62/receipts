@@ -84,14 +84,14 @@ export function resolvePronoun(text: string, topic: string | null): string {
 }
 
 /** Split an answer into claims (sentence-level), resolving a sentence-initial pronoun to the topic. */
-export function splitClaims(answer: string, topicHint?: string): Claim[] {
+export function splitClaims(answer: string, topicHint?: string, opts: SplitOptions = {}): Claim[] {
   const sentences = splitSentences(answer)
   const topic = topicHint?.trim() || (sentences.length ? guessTopic(sentences[0]) : null)
   const claims: Claim[] = []
   for (const s of sentences) {
     if (!isClaimLike(s)) continue
     const text = resolvePronoun(s, topic)
-    claims.push({ text, original: s, topic, index: claims.length, parts: decomposeClaim(text, topic ? subjectName(topic) : null) })
+    claims.push({ text, original: s, topic, index: claims.length, parts: decomposeClaim(text, topic ? subjectName(topic) : null, opts) })
   }
   return claims
 }
@@ -115,7 +115,46 @@ const ensureDot = (x: string) => (/[.!?]["”']?$/.test(x) ? x : `${x}.`)
  * birth–death parentheses, "X was a Y who Z" relative clauses, and ", and <verb>" coordination with an implied subject.
  * Anything the rules do not recognise stays as one part.
  */
-export function decomposeClaim(sentence: string, topic: string | null): string[] {
+export interface SplitOptions {
+  /** SPEC §13 revision 4: role lists, trailing name/title lists, ", where he …", "born on …", "and later …". */
+  v4?: boolean
+}
+
+const ITEM = `(?:the\\s+)?(?:"[^"]+"(?:\\s+[a-z]+)?|[A-Z][\\p{L}'’.&-]*(?:\\s+(?:of\\s+|the\\s+|de\\s+)?[A-Z][\\p{L}'’.&-]*){0,5})`
+const TRAILING_LIST = new RegExp(`^(.*?\\s)(${ITEM}(?:(?:,\\s+|,?\\s+and\\s+)${ITEM})+)\\.?$`, 'u')
+const article = (w: string) => (/^[aeiou]/i.test(w) ? 'an' : 'a')
+
+/** One rule at a time (revision 4); returns null when no rule applies. */
+function v4Rule(part: string, subject: string | null): string[] | null {
+  // American punctuation puts list commas inside quotes ("The String," "The Garden," and …): move them outside first.
+  const p = part.replace(/,(["”])/g, '$1,').replace(/\.(["”])$/, '$1').replace(/\.$/, '')
+  if (!subject) return null
+  let m = p.match(/^(.+?\s(?:is|was)\s.+?)\s+born\s+((?:on|in)\s.+)$/)
+  if (m && !/\b(?:who|which)\s*$/.test(m[1])) return [ensureDot(m[1].replace(/,$/, '')), ensureDot(`${subject} was born ${m[2]}`)]
+  m = p.match(/^(.+?),\s+where\s+(?:he|she|they)\s+(.+)$/i)
+  if (m) return [ensureDot(m[1]), ensureDot(`${subject} ${m[2]}`)]
+  m = p.match(new RegExp(`^(.+?),?\\s+and\\s+(?:later|then|subsequently)\\s+(${VERB}\\b.*)$`))
+  if (m) return [ensureDot(m[1]), ensureDot(`${subject} ${m[2]}`)]
+  m = p.match(/^(.+?\s(?:is|was|are|were)\s)(an?|the)\s+([^,]+(?:,\s*[^,]+)+)$/)
+  if (m) {
+    const items = m[3].split(/,\s*/).map((x) => x.replace(/^(?:and|or)\s+/, '').trim()).filter(Boolean)
+    if (items.length >= 2 && items.every((x) => x.split(/\s+/).length <= 4) && items.slice(1).every((x) => /^[a-z]/.test(x) && !/\b(?:who|which|known|born|in|of|for|with|at)\b/.test(x)))
+      return items.map((x, i) => ensureDot(`${i === 0 ? m![1] + m![2] : subject + ' ' + m![1].trim().split(/\s+/).pop() + ' ' + article(x)} ${x}`.replace(/\s+/g, ' ')))
+  }
+  m = p.match(TRAILING_LIST)
+  if (m && m[1].trim().split(/\s+/).length >= 2 && /\sand\s/.test(m[2])) {
+    const items = m[2].split(/,\s+(?:and\s+)?|,?\s+and\s+/).map((x) => x.trim()).filter(Boolean)
+    if (items.length >= 2) return items.map((x) => ensureDot(`${m![1]}${x}`))
+  }
+  return null
+}
+
+function v4Split(part: string, subject: string | null, depth = 0): string[] {
+  const r = depth < 3 ? v4Rule(part, subject) : null
+  return r ? r.flatMap((x) => v4Split(x, subject, depth + 1)) : [part]
+}
+
+export function decomposeClaim(sentence: string, topic: string | null, opts: SplitOptions = {}): string[] {
   let s = sentence.trim()
   const extra: string[] = []
   const subj0 = sentenceSubject(s)
@@ -149,5 +188,7 @@ export function decomposeClaim(sentence: string, topic: string | null): string[]
       parts.push(ensureDot(`${pronoun && topic ? topic : subject} ${c.replace(/^(?:he|she|they|it)\s+/i, '')}`))
     }
   } else parts.push(ensureDot(rest))
-  return [...parts.map((p) => p.replace(/\s+/g, ' ').replace(/\s+([.,])/g, '$1')), ...extra]
+  const clean = (p: string) => p.replace(/\s+/g, ' ').replace(/\s+([.,])/g, '$1')
+  const base = parts.map(clean)
+  return [...(opts.v4 ? base.flatMap((p) => v4Split(p, subject).map(clean)) : base), ...extra]
 }
