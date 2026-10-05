@@ -149,3 +149,10 @@ the splitter cuts "Quintus Sosius Senecio (fl." at the abbreviation; claims carr
 - Triage view added to every set (docs/results/triage-*.md, h1-report.md). New student-facing step: "What now?" — copy the answer
   with a Wikipedia footnote on every backed sentence and "[check: …]" on the rest, or copy a follow-up asking the chatbot for a
   checkable source for each unbacked claim (src/application/report.ts, tests/report.test.ts).
+
+## 12. E4 — whole pipeline beyond biographies (pre-registered 2026-10-06, pushed before the run)
+Judges asked whether the app works outside biographies. FEVER claims cover films, places, bands, science, sport… and their
+labels are against Wikipedia. Run the **shipped settings unchanged** (no selection) through the app's whole path — topic guess,
+splitter, live Wikipedia retrieval, ranking, model, gate — on every **original** FEVER claim in Symmetric FEVER dev+test (ids
+without the synthetic suffix: 355 claims; SUPPORTS = should be Backed, REFUTES = should not). Reported once with the plain checker
+and the triage view; per-item results committed. Not a selection run: nothing is tuned on it.
