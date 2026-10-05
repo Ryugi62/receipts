@@ -156,3 +156,6 @@ labels are against Wikipedia. Run the **shipped settings unchanged** (no selecti
 splitter, live Wikipedia retrieval, ranking, model, gate — on every **original** FEVER claim in Symmetric FEVER dev+test (ids
 without the synthetic suffix: 355 claims; SUPPORTS = should be Backed, REFUTES = should not). Reported once with the plain checker
 and the triage view; per-item results committed. Not a selection run: nothing is tuned on it.
+- **Result (run once, 2026-10-06):** 355 claims — balanced accuracy 75.5 % [70.6–79.3] vs plain checker 68.4 % (paired
+  +7.0 points [4.6, 9.5]); "Backed" precision 89.1 % (n=92); false "May conflict" on SUPPORTS 5.4 % vs 18.4 %; "May conflict"
+  precision 88.1 % (n=67) but it names 28.4 % of REFUTES (plain: 70.7 %). docs/results/e4-report.md.

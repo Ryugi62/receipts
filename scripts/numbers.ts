@@ -20,7 +20,7 @@ const lines = [
   (() => {
     const e = readFileSync('docs/results/e4-report.md', 'utf8')
     const er = row(e, 'Receipts').map((x) => x.replace(/ \[.*?\]/, '')), ep = row(e, 'plain checker').map((x) => x.replace(/ \[.*?\]/, ''))
-    return `Beyond biographies — the app's whole path on 355 FEVER claims (films, places, science, sport…): balanced accuracy <b>${er[2]}</b> vs ${ep[2]} for the simpler checker, false "may conflict" on true claims ${er[6]} vs ${ep[6]}; when it says "May conflict" it is right ${er[11].replace(/ \(n=\d+\)/, '')} of the time.`
+    return `Beyond biographies — the app's whole path on 355 FEVER claims (mixed topics: films, bands, places, science, people…): balanced accuracy <b>${er[2]}</b> vs ${ep[2]} for the simpler checker, false "may conflict" on true claims ${er[6]} vs ${ep[6]}; when it says "May conflict" it is right ${er[11].replace(/ \(n=\d+\)/, '')} of the time.`
   })(),
   `Limits: on whole raw paragraphs through the app it ties the simpler checker (${hr[2]} vs ${hp[2]}, 375 sentences) and backs only ${hr[5]} of the sentences humans support. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.`,
   `Easy synthetic test: given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${u(row(e1, 'plain checker'))}</b> of the time, ${nogate} with our thresholds but no gate, and Receipts <b>${u(row(e1, 'Receipts as shipped'))}</b> (712 pairs, Symmetric FEVER).`,
