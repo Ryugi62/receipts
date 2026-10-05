@@ -24,8 +24,8 @@ Wikipedia that backs or contradicts each claim — and leaves the judgement to y
 Small natural-language-inference models (the kind that decide whether sentence A supports sentence B) are over-confident on
 sentences that are **not about the claim**: they often call them a "contradiction". A plain fact-checker built on them tells you
 a true fact is false — my first version said Julia Faye's death date was contradicted by a sentence about her father.
-Receipts puts a **relevance gate** in front of the model: an evidence sentence may decide only if it is close in meaning, shares
-a real word with the claim beyond the name, and — for a conflict — is about the same subject. When a plain "top sentence + raw
+Receipts puts a **relevance gate** in front of the model: an evidence sentence may decide only if it is close in meaning to the
+claim, and a conflict may only come from the single most relevant sentence and only if it is about the same subject. When a plain "top sentence + raw
 model" checker would have answered differently, the app shows that answer and why the sentence was set aside.
 
 ## How it works

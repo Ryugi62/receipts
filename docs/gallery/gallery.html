@@ -53,7 +53,7 @@
     <div class="box"><b>2 · Retrieve</b><span>Wikipedia search per claim; prose only</span></div><div class="arrow">→</div>
     <div class="box"><b>3 · Rank</b><span>word pre-filter (40) → MiniLM embeddings (top 5)</span></div><div class="arrow">→</div>
     <div class="box"><b>4 · Infer</b><span>DeBERTa NLI: backs / contradicts / neutral</span></div><div class="arrow">→</div>
-    <div class="box gate"><b>5 · Gate</b><span>close in meaning + shared word + same subject — or no verdict</span></div>
+    <div class="box gate"><b>5 · Gate</b><span>close in meaning; a conflict only from the top sentence, same subject — or no verdict</span></div>
   </div>
   <div class="layers">src/domain — claims · gate · verdict (pure)<br>src/application — checkAnswer + ports<br>src/adapters — Wikipedia · transformers.js<br>web/ · scripts/ — UI · evaluation · captures</div>
   <p class="src">transformers.js (ONNX, WebAssembly) · Xenova/nli-deberta-v3-xsmall · Xenova/all-MiniLM-L6-v2 · MediaWiki API · TypeScript · Vite · Vitest · Playwright</p>
