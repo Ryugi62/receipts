@@ -9,6 +9,7 @@ import { WikipediaSource } from '../src/adapters/wikipedia'
 import { scoreEvidence, DEFAULT_OPTIONS } from '../src/application/checkAnswer'
 import { splitClaims, splitSentences, resolvePronoun } from '../src/domain/claims'
 import { arg, bucket, cachedFetch, readJsonl } from './lib'
+import { createHash } from 'node:crypto'
 
 const split = arg('split', 'dev')!
 const level = arg('level', 'fact')!
@@ -16,14 +17,19 @@ const limit = Number(arg('limit', '100000'))
 const data = arg('data', 'ChatGPT')!
 const docs = (readJsonl(`data/factscore/${data}.jsonl`) as any[]).filter((d) => d.annotations && d.annotations.length)
 // 2 of 5 hash buckets = dev topics, 3 of 5 = test topics (decided before looking at any result).
-const mine = docs.filter((d) => (bucket(d.topic, 5) < 2 ? 'dev' : 'test') === split).slice(0, limit)
+const sample = Number(arg('sample', '0'))
+const inSplit = docs.filter((d) => (bucket(d.topic, 5) < 2 ? 'dev' : 'test') === split)
+// --sample N: the N topics with the smallest SHA-1 of the name (a fixed pseudo-random sample, not file order).
+const sha = (t: string) => createHash('sha1').update(t).digest('hex')
+const mine = (sample ? [...inSplit].sort((a, b) => (sha(a.topic) < sha(b.topic) ? -1 : 1)).slice(0, sample) : inSplit).slice(0, limit)
 
 const wiki = new WikipediaSource({ fetch: cachedFetch() as any, searchPages: 2 })
 const modelId = arg('model', NLI_MODEL)!
 const deps = { nli: new TransformersNli(modelId, 'q8'), ranker: new TransformersRanker() }
 const opts = { ...DEFAULT_OPTIONS, topK: 5 }
 mkdirSync('docs/results', { recursive: true })
-const out = `docs/results/e2-${level}-${split}-${modelId.split('/')[1]}${data === 'ChatGPT' ? '' : '-' + data}.jsonl`
+const tagv = arg('tag', '')
+const out = `docs/results/e2-${level}-${split}-${modelId.split('/')[1]}${data === 'ChatGPT' ? '' : '-' + data}${tagv ? '-' + tagv : ''}.jsonl`
 const done = new Set(existsSync(out) ? readFileSync(out, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l).key) : [])
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim()

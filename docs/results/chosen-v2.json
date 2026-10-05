@@ -1,5 +1,4 @@
 {
- "model": "Xenova/nli-deberta-v3-xsmall",
  "gate": {
   "minSimilarity": 0.3,
   "minSharedTokens": 0,
@@ -12,6 +11,5 @@
   "entailNeedsSubject": false,
   "conflictFromTopOnly": true,
   "disagreement": "contradicted"
- },
- "chosenOn": "Revision 2 (SPEC \u00a79): ChatGPT dev topics only, constraints vs the plain checker; frozen before the PerplexityAI held-out run"
+ }
 }
