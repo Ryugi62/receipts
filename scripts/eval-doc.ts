@@ -21,7 +21,14 @@ Public, human-labelled data; no training; every table below is produced by a scr
   "May conflict" (plain checker: 25 %). "Backed" is as precise as the plain checker (94.1 % vs 94.3 %, base rate 84 % supported)
   but covers more facts (698 vs 548). On InstructGPT answers, where 85 % of facts are unsupported, "Backed" is right only 40 %
   of the time. On whole sentences through the app's own splitter and topic guess it backs few (balanced 57.1 %, tied).
+- **As a filter (triage view):** on the fresh set it marks 55.7 % of facts Backed (94.1 % right), and 79.2 % of the facts humans
+  could not support stay in the "check yourself" pile; skipping the same share at random would keep 44.3 %. The plain checker keeps
+  84.3 % but lets you skip only 43.7 %.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
+- **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
+  reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
+  fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
+  (−0.3 points [−2.7, 1.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
 
 ## History and protocol
 1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
@@ -35,8 +42,24 @@ Public, human-labelled data; no training; every table below is produced by a scr
 4. Disclosure: Julia Faye, Carlos Santana and Marianne McAndrew are UI samples I looked at while building; each table is also
    shown without them. Post-freeze code changes (batching; skipping "(disambiguation)" pages; dropping pronunciation
    parentheses) were not tuned on any test data; the PerplexityAI and sentence-level runs used the final code.
-5. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
+5. **Revision 3** (SPEC §11 and §11.1, each pushed before its run): bug fixes (splitter abbreviations, disambiguation in the
+   subject name) plus two options chosen on dev only — evidence clean-up and wider reading. Neither cleared the +1.0-point bar.
+   H1 was run once after the choice was pushed, on the 49 ChatGPT test topics never run at sentence level. Disclosure: while
+   diagnosing I looked at two items of the earlier E-full set, whose 40 topics are excluded from H1.
+6. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
    Receipts; it is kept in the tables for the baselines only and is not used as evidence.
+
+## Revision 3 — pre-registered options that did not clear the bar (dev), and H1
+${inc('docs/results/v3-selection.md')}
+
+${inc('docs/results/v3-selection-topk.md')}
+
+${inc('docs/results/h1-report.md')}
+
+## Triage view (share you can skip vs errors left in the "check" pile)
+${inc('docs/results/triage-perplexity.md')}
+
+${inc('docs/results/triage-chatgpt.md')}
 
 ## Revision 2 — component ablation
 ${inc('docs/results/ablation-v2.md')}

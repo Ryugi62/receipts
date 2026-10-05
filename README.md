@@ -11,7 +11,7 @@ each one, and a language-inference model **running in your browser** marks every
 - Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.3%** (712 pairs, Symmetric FEVER).
 - On a **fresh held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts), Receipts raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.
 - Balanced accuracy 70.7% vs 66.6%; "Backed" is as precise as the simpler checker (94.1%) and covers more facts. Settings were frozen on separate development topics before this run.
-- The price: it rarely catches a mistake by itself. "No receipt" is common, and "May conflict" is a hint to read the sentence, not a verdict.
+- Use it as a filter: on the same held-out set it marks **55.7%** of facts Backed (94.1% of those are right), and **79.2%** of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep 44.3%. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.
 - Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)
 <!-- /NUMBERS -->
 
@@ -42,6 +42,8 @@ When a plain "top sentence + raw model" checker would have answered differently,
    contradicts / neutral.
 5. **Gate + decide**: only gated sentences may decide; a conflict must come from the single most relevant gated sentence and
    be about the same subject; sources that disagree are shown side by side.
+6. **What now?** Copy the answer with a Wikipedia footnote on every backed sentence and a visible `[check: …]` on the rest, or
+   copy a follow-up question that asks the chatbot for a checkable source for each claim Receipts could not back.
 
 No training anywhere — pretrained models only. The only tuned numbers (relevance bar, two thresholds, subject rules) were
 chosen on development topics with rules pushed before each run (SPEC §7, §9), and frozen before the held-out runs.
@@ -69,7 +71,10 @@ npx tsx scripts/e2-report.ts --split test                                 # base
 - "May conflict" is a prompt to read the sentence, not a verdict: its precision ranged from 24 % to 63 % across the held-out
   sets. Many true facts still get "No receipt" — the tool is cautious, and on whole raw sentences it backs few (docs/eval.md, E-full).
 - English only. Works best for people, places, events and other things with a Wikipedia article.
-- The splitter is rule-based; unusual sentences are checked whole, which often ends in "no receipt".
+- The splitter is rule-based; unusual sentences are checked whole, which often ends in "no receipt". On whole raw sentences
+  through the app (fresh check H1, 375 sentences) it is no better than the plain checker (55.2 % vs 54.9 %) and backs only 13 % of
+  the sentences humans support. Two pre-registered fixes (cleaner evidence text, reading 10 sentences instead of 5) did not
+  clear their bar on dev and were not shipped (SPEC §11).
 - The human labels I evaluate against (FActScore) were made against a 2023 Wikipedia snapshot; the app reads today's
   Wikipedia, so some disagreements are the article changing, not the model.
 

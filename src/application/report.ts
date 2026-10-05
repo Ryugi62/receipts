@@ -25,6 +25,9 @@ export function askBackPrompt(results: ClaimResult[]): string {
   if (!open.length) return ''
   return [
     'For each statement below, give me one source I can check myself (a page title or link) that says exactly this. If you are not sure, say "not sure" instead of guessing.',
-    ...open.map((r, i) => `${i + 1}. ${r.claim.original}`),
+    ...open.map((r, i) => {
+      const rc = r.verdict.label === 'contradicted' ? r.verdict.receipts[0] : undefined
+      return `${i + 1}. ${r.claim.text}${rc ? ` (Wikipedia's "${rc.page}" article says: "${rc.sentence}")` : ''}`
+    }),
   ].join('\n')
 }

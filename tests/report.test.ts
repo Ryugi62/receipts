@@ -26,9 +26,14 @@ describe('citedDraft (copy with sources)', () => {
 })
 
 describe('askBackPrompt (ask the chatbot for sources)', () => {
+  it('uses the claim as checked (pronoun resolved)', () => {
+    const r = mk('She loved gardening.', 'no_receipt')
+    r.claim.text = 'Marie Curie loved gardening.'
+    expect(askBackPrompt([r])).toContain('1. Marie Curie loved gardening.')
+  })
   it('lists only the claims without a receipt or with a conflict, numbered', () => {
     const p = askBackPrompt(results)
-    expect(p).toContain('1. She won the Nobel Prize in 1911.')
+    expect(p).toContain('1. She won the Nobel Prize in 1911. (Wikipedia\'s "Marie Curie" article says: "She won in 1903.")')
     expect(p).toContain('2. She loved gardening.')
     expect(p).not.toContain('born in 1867')
     expect(p.toLowerCase()).toContain('not sure')

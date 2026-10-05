@@ -3,6 +3,6 @@
   "Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>74.3%</b> of the time; Receipts: <b>0.3%</b> (712 pairs, Symmetric FEVER).",
   "On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts), Receipts raises a false \"may conflict\" on true facts <b>3.6%</b> of the time, vs <b>12.9%</b> for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.",
   "Balanced accuracy 70.7% vs 66.6%; \"Backed\" is as precise as the simpler checker (94.1%) and covers more facts. Settings were frozen on separate development topics before this run.",
-  "The price: it rarely catches a mistake by itself. \"No receipt\" is common, and \"May conflict\" is a hint to read the sentence, not a verdict."
+  "Use it as a filter: on the same held-out set it marks <b>55.7%</b> of facts Backed (94.1% of those are right), and <b>79.2%</b> of the facts humans could not support stay in the \"check yourself\" pile — skipping the same share at random would keep 44.3%. It rarely names the mistake itself: \"May conflict\" is a hint to read the sentence, not a verdict."
  ]
 }

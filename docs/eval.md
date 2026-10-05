@@ -16,7 +16,14 @@ Public, human-labelled data; no training; every table below is produced by a scr
   "May conflict" (plain checker: 25 %). "Backed" is as precise as the plain checker (94.1 % vs 94.3 %, base rate 84 % supported)
   but covers more facts (698 vs 548). On InstructGPT answers, where 85 % of facts are unsupported, "Backed" is right only 40 %
   of the time. On whole sentences through the app's own splitter and topic guess it backs few (balanced 57.1 %, tied).
+- **As a filter (triage view):** on the fresh set it marks 55.7 % of facts Backed (94.1 % right), and 79.2 % of the facts humans
+  could not support stay in the "check yourself" pile; skipping the same share at random would keep 44.3 %. The plain checker keeps
+  84.3 % but lets you skip only 43.7 %.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
+- **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
+  reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
+  fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
+  (−0.3 points [−2.7, 1.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
 
 ## History and protocol
 1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
@@ -30,8 +37,74 @@ Public, human-labelled data; no training; every table below is produced by a scr
 4. Disclosure: Julia Faye, Carlos Santana and Marianne McAndrew are UI samples I looked at while building; each table is also
    shown without them. Post-freeze code changes (batching; skipping "(disambiguation)" pages; dropping pronunciation
    parentheses) were not tuned on any test data; the PerplexityAI and sentence-level runs used the final code.
-5. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
+5. **Revision 3** (SPEC §11 and §11.1, each pushed before its run): bug fixes (splitter abbreviations, disambiguation in the
+   subject name) plus two options chosen on dev only — evidence clean-up and wider reading. Neither cleared the +1.0-point bar.
+   H1 was run once after the choice was pushed, on the 49 ChatGPT test topics never run at sentence level. Disclosure: while
+   diagnosing I looked at two items of the earlier E-full set, whose 40 topics are excluded from H1.
+6. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
    Receipts; it is kept in the tables for the baselines only and is not used as evidence.
+
+## Revision 3 — pre-registered options that did not clear the bar (dev), and H1
+
+| System (same retrieved sentences) | Balanced accuracy | "Backed" precision | "May conflict" precision | False conflicts on supported |
+|---|---|---|---|---|
+| plain checker (raw) | 68.5% | 87.4% (n=349) | 57.7% (n=208) | 13.4% |
+| v2 settings, raw evidence | 73.1% | 85.7% (n=462) | 58.2% (n=79) | 5.0% |
+| v2 settings, cleaned evidence | 73.8% | 86.0% (n=470) | 58.0% (n=81) | 5.2% |
+| best cleaned setting under the rule | 73.8% | 86.0% (n=470) | 58.0% (n=81) | 5.2% |
+
+Rule: all of (a)(b)(c); 2897 of 7680 settings qualify.
+Best cleaned: gate {"minSimilarity":0.2,"minSharedTokens":0,"ignoreTopicTokens":false}, thresholds {"entail":0.7,"contradict":0.97,"contradictNeedsSubject":true,"entailNeedsSubject":false,"conflictFromTopOnly":true,"disagreement":"contradicted"}
+Decision (ship v3 only if ≥ 1.0 point above v2 on raw evidence): **keep v2 settings (cleanEvidence off) + bug fixes** — 73.8% vs 73.1%.
+
+
+| System (same retrieved sentences) | Balanced accuracy | "Backed" precision | "May conflict" precision | False conflicts on supported |
+|---|---|---|---|---|
+| plain checker (raw) | 69.2% | 88.3% (n=350) | 59.1% (n=208) | 12.9% |
+| v2 settings, raw evidence | 73.0% | 85.5% (n=462) | 59.5% (n=84) | 5.2% |
+| v2 settings, cleaned evidence | 73.5% | 85.6% (n=471) | 54.9% (n=82) | 5.6% |
+| best under the rule (top 5, cleaned) | 73.5% | 85.7% (n=469) | 67.1% (n=70) | 3.5% |
+
+| Arm (best setting) | Balanced | Backed precision | Conflict precision | False conflicts | Settings qualifying |
+|---|---|---|---|---|---|
+| top 5, raw | 73.0% | 85.5% (n=462) | 59.5% (n=84) | 5.2% | 2950 |
+| top 5, cleaned | 73.5% | 85.7% (n=469) | 67.1% (n=70) | 3.5% | 2573 |
+| top 8, raw | 73.1% | 85.7% (n=461) | 64.5% (n=76) | 4.1% | 2082 |
+| top 8, cleaned | 73.2% | 85.5% (n=468) | 60.3% (n=68) | 4.1% | 1634 |
+| top 10, raw | 73.0% | 85.1% (n=469) | 65.3% (n=72) | 3.8% | 1538 |
+| top 10, cleaned | 72.5% | 85.2% (n=458) | 64.7% (n=68) | 3.6% | 1032 |
+
+Rule: all of (a)(b)(c); 11809 settings qualify across arms.
+Best: top 5, cleaned evidence, gate {"minSimilarity":0.2,"minSharedTokens":0,"ignoreTopicTokens":false}, thresholds {"entail":0.7,"contradict":0.9,"contradictNeedsSubject":true,"entailNeedsSubject":false,"conflictFromTopOnly":true,"disagreement":"no_receipt"}
+Decision (ship only if ≥ 1.0 point above v2, top 5, raw evidence): **keep v2 settings (top 5, cleanEvidence off) + bug fixes** — 73.5% vs 73.0%.
+
+### H1 — the app's whole path with the v3 bug fixes, sentence level, 49 ChatGPT test topics not in E-full (fresh at this level, run once) — 375 items, 49 topics, 69.3% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
+|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 55.2% [51.6%–58.4%] | — | 68.2% (n=22) | 13.0% | 1.7% | 5.9% | 97.3% | 94.1% |
+| plain checker (top sentence + raw NLI label) | 54.9% [51.8%–57.8%] | -0.3 pts [-2.7, 1.8] | 76.5% (n=17) | 11.3% | 9.6% | 4.5% | 98.5% | 95.5% |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+## Triage view (share you can skip vs errors left in the "check" pile)
+### Triage view — fresh held-out PerplexityAI (v2 run; code before the v3 bug fixes) — 1253 items, 35 topics, 15.7% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
+|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 70.7% [66.3%–74.0%] | — | 94.1% (n=698) | 62.2% | 3.6% | 55.7% | 79.2% | 44.3% |
+| plain checker (top sentence + raw NLI label) | 66.6% [63.0%–69.8%] | -4.1 pts [-6.3, -2.1] | 94.3% (n=548) | 49.0% | 12.9% | 43.7% | 84.3% | 56.3% |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+### Triage view — ChatGPT test topics (seen in v1; code before the v3 bug fixes) — 2774 items, 89 topics, 37.0% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
+|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 72.4% [70.2%–74.5%] | — | 85.2% (n=1307) | 63.7% | 3.5% | 47.1% | 81.1% | 52.9% |
+| plain checker (top sentence + raw NLI label) | 67.1% [64.9%–68.8%] | -5.3 pts [-6.7, -4.1] | 85.9% (n=964) | 47.4% | 11.9% | 34.8% | 86.8% | 65.2% |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
 
 ## Revision 2 — component ablation
 

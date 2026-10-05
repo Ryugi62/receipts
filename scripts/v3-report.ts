@@ -27,6 +27,10 @@ const systems: [string, Part][] = [
   ['Receipts v2 (raw evidence)', R(v2, false)],
   ['plain checker (top sentence + raw NLI label)', (cl, t, ev) => naiveVerdict(ev.slice(0, 5).map((e) => toEv(cl, t, e, OFF, false)))],
 ]
+// When the shipped v3 settings are the v2 settings, show one row for it.
+const same = !v3.cleanEvidence && (v3.topK ?? 5) === 5 && JSON.stringify(v3.gate) === JSON.stringify(v2.gate) && JSON.stringify(v3.thresholds) === JSON.stringify(v2.thresholds)
+if (same) { systems.shift(); systems[0][0] = 'Receipts (v2 settings, as shipped)' }
+const BASE = same ? 0 : 1
 const verdict = (p: Part, r: Rec) => (r.parts ? aggregateVerdicts(r.parts.map((x) => p(x.text, r.topic, x.ev))) : p(r.claim, r.topic, r.ev ?? [])).label
 type Pre = { topic: string; label: 'S' | 'NS'; v: string[] }
 const rs: Pre[] = recs.map((r) => ({ topic: r.key.split('|')[0], label: r.label, v: systems.map(([, p]) => verdict(p, r)) }))
@@ -50,12 +54,12 @@ const samples = Array.from({ length: 1000 }, () => Array.from({ length: groups.l
 const q = (a: number[]) => { const s = [...a].sort((x, y) => x - y); return [s[25], s[974]] }
 const nNS = rs.filter((r) => r.label === 'NS').length
 const lines = [`### ${title} — ${rs.length} items, ${groups.length} topics, ${pct(nNS / rs.length)} not supported by humans`, '',
-  '| System | Balanced accuracy [95 % CI] | Δ vs v2 (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |',
+  `| System | Balanced accuracy [95 % CI] | Δ vs ${same ? 'Receipts' : 'v2'} (paired 95 % CI) |`+' "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |',
   '|---|---|---|---|---|---|---|---|---|']
 systems.forEach(([name], i) => {
   const m = score(rs, i)
   const ci = q(samples.map((s) => score(s, i).bal))
-  const d = i === 1 ? '—' : (() => { const x = q(samples.map((s) => score(s, i).bal - score(s, 1).bal)); return `${(100 * (m.bal - score(rs, 1).bal)).toFixed(1)} pts [${(100 * x[0]).toFixed(1)}, ${(100 * x[1]).toFixed(1)}]` })()
+  const d = i === BASE ? '—' : (() => { const x = q(samples.map((s) => score(s, i).bal - score(s, BASE).bal)); return `${(100 * (m.bal - score(rs, BASE).bal)).toFixed(1)} pts [${(100 * x[0]).toFixed(1)}, ${(100 * x[1]).toFixed(1)}]` })()
   lines.push(`| ${name} | ${pct(m.bal)} [${pct(ci[0])}–${pct(ci[1])}] | ${d} | ${Number.isNaN(m.backedPrec) ? '—' : pct(m.backedPrec)} (n=${m.backed}) | ${pct(m.backedOfSupported)} | ${pct(m.fc)} | ${pct(m.skip)} | ${pct(m.kept)} | ${pct(m.flagged)} |`)
 })
 lines.push('', '"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).')

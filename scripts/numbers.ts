@@ -13,7 +13,11 @@ const lines = [
   `Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${u(row(e1, 'plain checker'))}</b> of the time; Receipts: <b>${u(row(e1, 'Receipts as shipped'))}</b> (712 pairs, Symmetric FEVER).`,
   `On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, ${Number(facts).toLocaleString('en')} facts), Receipts raises a false "may conflict" on true facts <b>${short(r[5])}</b> of the time, vs <b>${short(p[5])}</b> for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.`,
   `Balanced accuracy ${short(r[2])} vs ${short(p[2])}; "Backed" is as precise as the simpler checker (${short(r[3])}) and covers more facts. Settings were frozen on separate development topics before this run.`,
-  `The price: it rarely catches a mistake by itself. "No receipt" is common, and "May conflict" is a hint to read the sentence, not a verdict.`,
+  (() => {
+    const t = readFileSync('docs/results/triage-perplexity.md', 'utf8')
+    const c = row(t, 'Receipts').map((x) => x.replace(/ \[.*?\]/, ''))
+    return `Use it as a filter: on the same held-out set it marks <b>${c[7]}</b> of facts Backed (${c[4].replace(/ \(n=\d+\)/, '')} of those are right), and <b>${c[8]}</b> of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep ${c[9]}. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.`
+  })(),
 ]
 writeFileSync('web/numbers.json', JSON.stringify({ lines }, null, 1) + '\n')
 const md = lines.map((l) => '- ' + l.replace(/<\/?b>/g, '**')).join('\n') + '\n- Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)'
