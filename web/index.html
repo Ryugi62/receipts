@@ -46,6 +46,17 @@
 
     <section id="results" class="results"></section>
 
+    <section id="next" class="card next" hidden>
+      <h2>What now?</h2>
+      <p class="small muted">Keep the sources for what is backed, and ask the chatbot to back up the rest.</p>
+      <div class="next-actions">
+        <button id="copy-draft" class="secondary">Copy the answer with sources</button>
+        <button id="copy-ask" class="secondary">Copy a question for the chatbot</button>
+      </div>
+      <p id="copy-note" class="small muted" aria-live="polite"></p>
+      <pre id="ask-preview" class="preview" hidden></pre>
+    </section>
+
     <section class="how card">
       <h2>How do we know it reads the evidence?</h2>
       <p>Small language-inference models are over-confident on sentences that are not about the claim: they often call

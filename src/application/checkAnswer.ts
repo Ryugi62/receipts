@@ -1,5 +1,6 @@
 // Use case: check a chatbot answer claim by claim. Depends only on domain + ports.
 import { splitClaims, splitSentences, type Claim } from '../domain/claims'
+import { cleanForInference, normalizeDates } from '../domain/evidence'
 import { passesRelevanceGate, lexicalPrefilter, aboutSubject, DEFAULT_GATE, type GateConfig } from '../domain/gate'
 import { decideVerdict, aggregateVerdicts, DEFAULT_THRESHOLDS, type Inference, type ScoredEvidence, type Thresholds, type Verdict } from '../domain/verdict'
 
@@ -31,6 +32,8 @@ export interface CheckOptions {
   gate: GateConfig
   thresholds: Thresholds
   topicHint?: string
+  /** SPEC §11: the model reads cleaned evidence (pronoun → page subject, native-script glosses dropped, one date format). */
+  cleanEvidence?: boolean
 }
 
 export const DEFAULT_OPTIONS: CheckOptions = { topK: 5, gate: DEFAULT_GATE, thresholds: DEFAULT_THRESHOLDS }
@@ -69,7 +72,9 @@ export async function scoreEvidence(
     .map((c, i) => ({ ...c, similarity: sims[i] }))
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, opts.topK)
-  const inf = await deps.nli.infer(top.map((c) => ({ premise: c.sentence, hypothesis: claimText })))
+  const inf = await deps.nli.infer(top.map((c) => (opts.cleanEvidence
+    ? { premise: cleanForInference(c.sentence, c.page), hypothesis: normalizeDates(claimText) }
+    : { premise: c.sentence, hypothesis: claimText })))
   return top.map((c, i) => ({
     ...c,
     passesGate: passesRelevanceGate(claimText, c.sentence, c.similarity, opts.gate, topic),

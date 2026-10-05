@@ -50,3 +50,30 @@ describe('checkAnswer', () => {
     expect(v.label).toBe('no_receipt')
   })
 })
+
+describe('cleanEvidence (SPEC §11)', () => {
+  it('the model reads the cleaned sentence; the receipt shows the original', async () => {
+    const seen: string[] = []
+    const nli: Deps['nli'] = {
+      async infer(pairs) {
+        return pairs.map(({ premise, hypothesis }) => {
+          seen.push(premise)
+          return premise.startsWith('Liam Payne was a member') && hypothesis.includes('One Direction')
+            ? { entail: 0.95, contradict: 0.01, neutral: 0.04 } : { entail: 0.01, contradict: 0.01, neutral: 0.98 }
+        })
+      },
+    }
+    const d: Deps = {
+      source: { async pagesFor() { return [{ title: 'Liam Payne', url: 'u', text: 'He was a member of the pop band One Direction.' }] } },
+      ranker: { similarities: async (_c, s) => s.map(() => 0.8) },
+      nli,
+    }
+    const opts = { topK: 5, gate: { minSimilarity: 0.3, minSharedTokens: 0, ignoreTopicTokens: false }, thresholds: { entail: 0.7, contradict: 0.97 } }
+    const off = await checkAnswer('Liam Payne was a member of One Direction.', d, opts)
+    expect(off[0].verdict.label).toBe('no_receipt')
+    const on = await checkAnswer('Liam Payne was a member of One Direction.', d, { ...opts, cleanEvidence: true })
+    expect(on[0].verdict.label).toBe('backed')
+    expect(on[0].verdict.receipts[0].sentence).toBe('He was a member of the pop band One Direction.')
+    expect(seen).toContain('Liam Payne was a member of the pop band One Direction.')
+  })
+})

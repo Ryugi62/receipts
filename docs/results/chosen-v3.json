@@ -1,0 +1,16 @@
+{
+ "gate": {
+  "minSimilarity": 0.3,
+  "minSharedTokens": 0,
+  "ignoreTopicTokens": false
+ },
+ "thresholds": {
+  "entail": 0.7,
+  "contradict": 0.97,
+  "contradictNeedsSubject": true,
+  "entailNeedsSubject": false,
+  "conflictFromTopOnly": true,
+  "disagreement": "contradicted"
+ },
+ "cleanEvidence": false
+}

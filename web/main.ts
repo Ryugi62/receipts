@@ -2,6 +2,7 @@
 import { env } from '@huggingface/transformers'
 import { checkAnswer, type ClaimResult, type CheckOptions, type PartResult } from '../src/application/checkAnswer'
 import { naiveVerdict, type Thresholds } from '../src/domain/verdict'
+import { citedDraft, askBackPrompt } from '../src/application/report'
 import { WikipediaSource } from '../src/adapters/wikipedia'
 import { TransformersNli, TransformersRanker } from '../src/adapters/transformers'
 import config from './config.json'
@@ -48,7 +49,21 @@ const deps = {
   ranker: new TransformersRanker(undefined, onProgress),
   nli: new TransformersNli(config.model, 'q8', onProgress),
 }
-const opts: CheckOptions = { topK: 5, gate: config.gate, thresholds: config.thresholds as Thresholds }
+const opts: CheckOptions = { topK: 5, gate: config.gate, thresholds: config.thresholds as Thresholds, cleanEvidence: (config as { cleanEvidence?: boolean }).cleanEvidence ?? false }
+
+// "What now?": copy the answer with sources, or a follow-up question for the chatbot (src/application/report.ts).
+let last: ClaimResult[] = []
+const note = $('copy-note')
+async function copy(text: string, done: string) {
+  try { await navigator.clipboard.writeText(text); note.textContent = done }
+  catch { note.textContent = 'Copy is blocked in this browser — select the text below instead.'; const pre = $('ask-preview'); pre.textContent = text; pre.hidden = false }
+}
+$('copy-draft').addEventListener('click', () => copy(citedDraft(last), 'Copied: the answer with a Wikipedia footnote on every backed sentence and [check] on the rest.'))
+$('copy-ask').addEventListener('click', () => {
+  const q = askBackPrompt(last)
+  const pre = $('ask-preview'); pre.textContent = q || 'Every claim is backed — nothing to ask.'; pre.hidden = false
+  if (q) copy(q, 'Copied: paste it into the chatbot. A real source you can open beats a confident sentence.')
+})
 
 const howList = $('how-numbers')
 for (const line of numbers.lines as string[]) {
@@ -64,6 +79,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
     topicEl.value = k
     results.innerHTML = ''
     $('summary').hidden = true
+    $('next').hidden = true
     answerEl.focus()
   }),
 )
@@ -124,6 +140,9 @@ btn.addEventListener('click', async () => {
   btn.disabled = true
   results.innerHTML = ''
   $('summary').hidden = true
+  $('next').hidden = true
+  $('ask-preview').hidden = true
+  note.textContent = ''
   statusBox.hidden = false
   statusText.textContent = 'Getting ready…'
   const t0 = performance.now()
@@ -148,6 +167,9 @@ btn.addEventListener('click', async () => {
     $('summary').hidden = false
     $('summary').dataset.n = String(++runs)
     $('sum-big').textContent = `${counts.backed} of ${parts} claims backed`
+    last = all
+    $('next').hidden = false
+    $('copy-ask').hidden = !askBackPrompt(all)
     $('sum-line').textContent = `${counts.contradicted} may conflict with Wikipedia · ${counts.no_receipt} with no receipt — check those before you use them. (${all.length} sentences, ${((performance.now() - t0) / 1000).toFixed(0)} s)`
   } catch (e) {
     statusText.textContent = `Something went wrong: ${(e as Error).message}. Wikipedia may be busy — try again in a minute.`

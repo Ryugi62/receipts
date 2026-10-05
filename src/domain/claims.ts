@@ -1,4 +1,5 @@
 // Claims: split a chatbot answer into checkable statements. Pure functions, no I/O.
+import { subjectName } from './evidence'
 
 export interface Claim {
   /** Claim text as checked (pronoun at the start replaced by the topic). */
@@ -15,6 +16,7 @@ const ABBREVIATIONS = new Set([
   'dr', 'mr', 'mrs', 'ms', 'prof', 'sr', 'jr', 'st', 'mt', 'vs', 'etc', 'inc', 'ltd', 'co', 'corp', 'no', 'vol',
   'bros', 'ave', 'fig', 'approx', 'est', 'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec', 'gen', 'gov', 'sen', 'rep', 'col', 'lt',
   'u.s', 'u.k', 'e.g', 'i.e', 'a.m', 'p.m', 'ph.d',
+  'fl', 'c', 'ca', 'b', 'd',
 ])
 
 /** Split text into sentences without breaking on abbreviations, initials ("J."), dotted acronyms or decimals. */
@@ -75,8 +77,9 @@ const PRONOUN_POSSESSIVE = /^(His|Her|Their|Its)\b/
 /** Replace a sentence-initial pronoun (He/She/They/It, His/Her/Their/Its) with the topic. */
 export function resolvePronoun(text: string, topic: string | null): string {
   if (!topic) return text
-  if (PRONOUN_SUBJECT.test(text)) return text.replace(PRONOUN_SUBJECT, topic)
-  if (PRONOUN_POSSESSIVE.test(text)) return text.replace(PRONOUN_POSSESSIVE, `${topic}'s`)
+  const name = subjectName(topic)
+  if (PRONOUN_SUBJECT.test(text)) return text.replace(PRONOUN_SUBJECT, name)
+  if (PRONOUN_POSSESSIVE.test(text)) return text.replace(PRONOUN_POSSESSIVE, `${name}'s`)
   return text
 }
 
@@ -88,7 +91,7 @@ export function splitClaims(answer: string, topicHint?: string): Claim[] {
   for (const s of sentences) {
     if (!isClaimLike(s)) continue
     const text = resolvePronoun(s, topic)
-    claims.push({ text, original: s, topic, index: claims.length, parts: decomposeClaim(text, topic) })
+    claims.push({ text, original: s, topic, index: claims.length, parts: decomposeClaim(text, topic ? subjectName(topic) : null) })
   }
   return claims
 }

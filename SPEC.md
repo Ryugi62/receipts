@@ -129,3 +129,13 @@ the splitter cuts "Quintus Sosius Senecio (fl." at the abbreviation; claims carr
   precision no more than 3 points below v2. (H2) PerplexityAI fact level re-scored, labelled "seen in v2".
 - Also reported for every set: the **triage** view — share of claims the student can skip (Backed) and share of human-unsupported
   facts that stay in the "check yourself" pile, next to flagging the same number of claims at random.
+
+### 11.1 Revision 3 dev result (2026-10-06) and one more pre-registered option (pushed before its dev run)
+- Dev result (docs/results/v3-selection.md): cleaned evidence 73.8 % vs v2 on raw evidence 73.1 % — **+0.7 points, below the
+  1.0 bar, so `cleanEvidence` stays off.** The bug fixes stay. Most supported facts that end as "No receipt" are not about wording:
+  the sentence that would back them is not among the five the ranker passes to the model.
+- **Option `topK` (wider reading):** pass the top 5 / 8 / 10 ranked sentences to the model (one dev run with 10 stores all three,
+  since the top 5 is a prefix of the top 10), each with `cleanEvidence` off/on, the same grid and constraints (a)(b)(c).
+  Ship only if ≥ 1.0 point above v2 (top 5, raw) on the same dev run; cost: up to 2× model calls per claim, so also report
+  the time of a 7-sentence check on the live site.
+- H1 (fresh sentence-level held-out) is still unrun; it is run once on whatever this selection ships.
