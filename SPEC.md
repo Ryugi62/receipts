@@ -82,3 +82,16 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
 - E2 balanced accuracy ≥ 0.70 on held-out topics: **missed** — 68.0 % [65.4–70.2] (2,774 facts, 89 topics); "Backed" precision 83.7 %.
 - 0 network calls carry the pasted answer: met (unit test G/W/T 6). No key, no account: met. First check < 60 s with download:
   met (24 s on the live site, `scripts/smoke-live.mjs`).
+
+## 9. Revision 2 — pre-registered before running it (2026-10-05, pushed before any v2 sweep or new held-out run)
+Why: on held-out ChatGPT topics v1 tied the plain "top sentence + raw model" checker and was worse than it on conflicts
+(false conflicts 13.9 % vs 11.9 %, conflict precision 39.7 % vs 56.4 %). Two new options target that: a conflict may come only
+from the most relevant gated sentence (`conflictFromTopOnly`), and disagreeing sources may abstain (`disagreement`).
+- Selection on ChatGPT **dev** only. Keep settings with (a) "Backed" precision ≥ 85 %, (b) false conflicts on human-supported
+  facts ≤ the plain checker's on dev, (c) "May conflict" precision ≥ the plain checker's on dev (≥ 20 calls). Pick the best
+  balanced accuracy. If none meets (c), drop (c) and say so.
+- New held-out set, never run before: **PerplexityAI** biographies (FActScore), test topics, a hash-chosen sample of 40
+  (sorted by SHA-1 of the name). Reported once, against the plain checker and "flag everything", with topic bootstrap intervals.
+- Full app path (claim splitter + topic guess, no hints) at sentence level on 40 hash-chosen ChatGPT **test** topics.
+- The v1 ChatGPT test set is re-scored with v2 settings and labelled "seen before (v1)".
+- Not reported as evidence: the "conflicts resting on someone else" count (it uses the gate's own subject rule — circular).

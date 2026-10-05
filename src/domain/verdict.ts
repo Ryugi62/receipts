@@ -43,6 +43,10 @@ export interface Thresholds {
   contradictNeedsSubject?: boolean
   /** Only a sentence about the claim's subject may back it. */
   entailNeedsSubject?: boolean
+  /** A conflict may only come from the most relevant gated sentence (not from any of the top k). */
+  conflictFromTopOnly?: boolean
+  /** When gated sentences both back and contradict the claim: report a conflict (default) or abstain. */
+  disagreement?: 'contradicted' | 'no_receipt'
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = { entail: 0.6, contradict: 0.6 }
@@ -59,8 +63,11 @@ export function decideVerdict(evidence: ScoredEvidence[], t: Thresholds = DEFAUL
       .filter((e) => e.mentionsSubject !== false || !(key === 'entail' ? t.entailNeedsSubject : t.contradictNeedsSubject))
       .sort((a, b) => b.inference[key] - a.inference[key])[0]
   const support = best('entail')
-  const refute = best('contradict')
+  const topGated = [...gated].sort((a, b) => b.similarity - a.similarity)[0]
+  const refuteAny = best('contradict')
+  const refute = t.conflictFromTopOnly ? (refuteAny && refuteAny === topGated ? refuteAny : undefined) : refuteAny
   if (support && refute) {
+    if (t.disagreement === 'no_receipt') return { label: 'no_receipt', receipts: [toReceipt(refute), toReceipt(support)], disagreement: true, gated: gated.length }
     return { label: 'contradicted', receipts: [toReceipt(refute), toReceipt(support)], disagreement: true, gated: gated.length }
   }
   if (refute) return { label: 'contradicted', receipts: [toReceipt(refute)], disagreement: false, gated: gated.length }

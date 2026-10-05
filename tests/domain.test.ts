@@ -171,3 +171,16 @@ describe('naiveVerdict (baseline)', () => {
     expect(decideVerdict([other, top], DEFAULT_THRESHOLDS).label).toBe('backed')
   })
 })
+
+describe('conflict options', () => {
+  it('conflictFromTopOnly ignores a contradiction that is not the most relevant gated sentence', () => {
+    const top = { ...ev('A', 0.1, 0.1), similarity: 0.9 }
+    const low = { ...ev('B', 0.0, 0.99), similarity: 0.5 }
+    expect(decideVerdict([top, low], { ...DEFAULT_THRESHOLDS }).label).toBe('contradicted')
+    expect(decideVerdict([top, low], { ...DEFAULT_THRESHOLDS, conflictFromTopOnly: true }).label).toBe('no_receipt')
+  })
+  it('disagreement can abstain while still listing both receipts', () => {
+    const v = decideVerdict([ev('E', 0.95, 0.01), ev('F', 0.02, 0.93)], { ...DEFAULT_THRESHOLDS, disagreement: 'no_receipt' })
+    expect([v.label, v.disagreement, v.receipts.length]).toEqual(['no_receipt', true, 2])
+  })
+})
