@@ -103,3 +103,29 @@ from the most relevant gated sentence (`conflictFromTopOnly`), and disagreeing s
   ≥ 0.70 target is met only as a point estimate (borderline). False conflicts on human-supported facts 3.6 % vs 12.9 %.
 - Most of the gain comes from the asymmetric decision rule, not the similarity gate (ablation). Few real errors are caught as
   "May conflict". The full app path (own splitter, guessed topic) stays weak: 57.1 % at sentence level.
+
+## 11. Revision 3 — evidence clean-up, pre-registered before running it (2026-10-06, pushed before any v3 run)
+Why: on the app's whole path (E-full) Receipts backs only 8.5 % of sentences while humans support 40.3 %; a student sees a
+wall of "No receipt". Reading **dev** misses (and two E-full test items, whose 40 topics are therefore excluded from the v3
+held-out below) shows that many misses are text-handling, not reasoning: the evidence starts with "He/She" so the model cannot
+tell it is about the same person; lead sentences carry native-script names ("(板倉 滉, Itakura Kō; born 27 January 1997)");
+the splitter cuts "Quintus Sosius Senecio (fl." at the abbreviation; claims carry the page's disambiguation ("Miguel Díaz
+(baseball) was signed …"); "August 29, 1993" vs "29 August 1993".
+- **Always-on fixes (bugs):** splitter abbreviations `fl. c. ca. b. d.`; the subject name used in claim text drops a trailing
+  "(…)" disambiguation (the search still uses the full topic).
+- **Option `cleanEvidence` (what is selected):** before inference only — never in what the student sees — (1) a leading
+  He/She/They/His/Her/Their in an evidence sentence becomes the page's subject name, (2) parenthesis segments with non-Latin
+  script or a "Language:" gloss are dropped (other segments such as "born 1940" stay), (3) dates are written one way
+  ("August 29, 1993" → "29 August 1993") in both evidence and claim.
+- Each evaluation run stores the model's scores with and without `cleanEvidence` on the same retrieved sentences, so the
+  comparison is paired.
+- **Selection on ChatGPT dev only** (a new run with the fixes): the §9 grid and constraints (a) "Backed" precision ≥ 85 %,
+  (b) false conflicts on human-supported facts ≤ the plain checker's, (c) "May conflict" precision ≥ the plain checker's
+  (≥ 20 calls), for clean scores; best balanced accuracy. **Ship v3 only if** that is ≥ 1.0 point above the v2 settings on
+  raw scores of the same dev run; otherwise ship v2 with the bug fixes and say so.
+- **Held-out, run once after the choice is pushed:** (H1, primary) the app's whole path at sentence level on the ChatGPT test
+  topics **not** among the 40 E-full topics (never run at sentence level; their facts were scored in v1/v2): v3 vs v2 vs plain
+  checker, paired topic bootstrap. Success = balanced accuracy v3 − v2 > 0 with the 95 % interval above 0, and "Backed"
+  precision no more than 3 points below v2. (H2) PerplexityAI fact level re-scored, labelled "seen in v2".
+- Also reported for every set: the **triage** view — share of claims the student can skip (Backed) and share of human-unsupported
+  facts that stay in the "check yourself" pile, next to flagging the same number of claims at random.
