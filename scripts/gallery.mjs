@@ -7,11 +7,13 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const naive = readFileSync('docs/results/e1-test-nli-deberta-v3-xsmall-q8.md', 'utf8')
-const raw = naive.match(/raw model says "contradicted": \d+\/\d+ = ([\d.]+%)/)[1]
-const gated = naive.match(/no_receipt WITH relevance gate: \d+\/\d+ = ([\d.]+%)/)[1]
+const cell = (name) => naive.split('\n').find((l) => l.startsWith(`| ${name}`)).split('|').map((c) => c.trim())
+const raw = cell('plain checker')[8].match(/= ([\d.]+%)/)[1]
+const gated = cell('Receipts as shipped')[8].match(/= ([\d.]+%)/)[1]
 const nums = JSON.parse(readFileSync('web/numbers.json', 'utf8')).lines
-const e2line = (nums.find((l) => l.includes('real ChatGPT answers')) ?? '').replace(/<[^>]+>/g, '')
-const html = readFileSync('docs/gallery/gallery.html', 'utf8').replace('{{RAW}}', raw).replace('{{GATED}}', gated).replace('{{E2LINE}}', e2line)
+const e2line = (nums.find((l) => l.includes('Real ChatGPT answers')) ?? '').replace(/<[^>]+>/g, '')
+const stress = (nums.find((l) => l.includes('stress test')) ?? '').replace(/<[^>]+>/g, '')
+const html = readFileSync('docs/gallery/gallery.html', 'utf8').replace('{{RAW}}', raw).replace('{{GATED}}', gated).replace('{{E2LINE}}', e2line).replace('{{STRESS}}', stress)
 writeFileSync('docs/gallery/gallery.rendered.html', html)
 
 const browser = await chromium.launch()
@@ -25,17 +27,23 @@ for (const [id, name] of [['thumb', '00-thumbnail'], ['numbers', '03-numbers'], 
 const server = await preview({ preview: { port: 4320, host: '127.0.0.1' }, logLevel: 'error' })
 const app = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 })
 await app.goto(server.resolvedUrls.local[0])
-await app.click('.chip[data-sample="Julia Faye"]')
-await app.click('#check')
-await app.waitForSelector('#summary:not([hidden])', { timeout: 300000 })
 await app.addStyleTag({ content: '.cta-bar{display:none!important} main{padding-top:16px}' })
-await app.locator('#summary').scrollIntoViewIfNeeded()
-await app.evaluate(() => window.scrollBy(0, -10))
+const run = async (sample) => {
+  await app.goto(server.resolvedUrls.local[0])
+  await app.addStyleTag({ content: '.cta-bar{display:none!important} main{padding-top:16px}' })
+  await app.click(`.chip[data-sample="${sample}"]`)
+  await app.evaluate(() => document.getElementById('check').click())
+  await app.waitForSelector('#summary:not([hidden])', { timeout: 300000 })
+}
+await run('Eiffel Tower')
+await app.locator('#summary').evaluate((el) => el.scrollIntoView({ block: 'start' }))
 await app.screenshot({ path: 'docs/gallery/01-result.png' })
-await app.click('.claim [data-swap]')
-await app.waitForSelector('.claim .swap b', { timeout: 120000 })
-await app.locator('.claim [data-swap]').first().evaluate((el) => el.scrollIntoView({ block: 'center' }))
-await app.screenshot({ path: 'docs/gallery/02-swap-test.png' })
+await run('Marianne McAndrew')
+const note = app.locator('.naive').first()
+if (await note.count()) {
+  await note.evaluate((el) => el.closest('.claim').scrollIntoView({ block: 'center' }))
+  await app.screenshot({ path: 'docs/gallery/02-plain-checker-note.png' })
+}
 await browser.close()
 server.httpServer.close()
 console.log('gallery written')

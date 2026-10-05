@@ -8,6 +8,11 @@ each one, and a language-inference model **running in your browser** marks every
 [ML Empowerment Build Challenge 3.0](https://ml-build-challenge-3.devpost.com/)
 
 <!-- NUMBERS -->
+- Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.0%** (712 pairs, Symmetric FEVER).
+- **Real ChatGPT answers** with human labels (FActScore; 2,774 facts on 89 held-out topics): when Receipts says **Backed**, humans agree **83.7%** (1119 facts). Everything else is left for you to check. Overall it is about as accurate as a plain "top sentence + raw model" checker (balanced accuracy 68.0% vs 67.1%).
+- When the right article is **not** found (stress test: other pages only), the plain checker based **216** conflicts on a sentence about someone or something else; Receipts: **0**.
+- "May conflict" is a hint, not a verdict: on held-out data only 39.7% of those calls matched a human "not supported" label (base rate 37.0%).
+- Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)
 <!-- /NUMBERS -->
 
 ## Why

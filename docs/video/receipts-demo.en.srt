@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:13,390
+Students paste AI answers into homework every day. The answers sound equally sure when they are right and when they are wrong. Receipts checks an AI answer claim by claim, in your browser, with no account and no key.
+
+2
+00:00:13,994 --> 00:00:24,974
+Here is a paragraph where I planted one mistake. Receipts splits it into claims, searches Wikipedia for each one, and a small language model running in the browser reads the best sentences.
+
+3
+00:00:42,113 --> 00:00:55,773
+The answer says the tower was completed in 1899. Receipts flags it: may conflict, and shows the sentence it relied on. Built from 1887 to 1889. You decide, with the receipt in front of you.
+
+4
+00:00:56,375 --> 00:01:10,405
+This one is a real ChatGPT answer. A plain checker would take the top sentence, about her husband, and call the claim contradicted. Receipts sets that sentence aside, because it is not about this claim, and tells you to check it yourself.
+
+5
+00:01:25,435 --> 00:01:47,625
+I measured this on public, human-labelled data. On sentences that are not about the claim, the small model alone says contradiction seventy-four percent of the time. Receipts: zero. On real ChatGPT answers, when Receipts says backed, human annotators agree eighty-four percent of the time. Overall it only ties a plain checker, and I report that.
+
+6
+00:01:48,227 --> 00:01:59,847
+No training anywhere: pretrained models, a relevance gate, settings chosen on development data and frozen before the held-out test. Receipts. Ask the AI for its receipts.

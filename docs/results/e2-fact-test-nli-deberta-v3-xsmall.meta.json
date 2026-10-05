@@ -1,0 +1,9 @@
+{
+  "split": "test",
+  "level": "fact",
+  "topics": 89,
+  "items": 2774,
+  "model": "Xenova/nli-deberta-v3-xsmall",
+  "runSeconds": 3704,
+  "when": "2026-10-05T10:07:10.833Z"
+}

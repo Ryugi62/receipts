@@ -13,6 +13,15 @@ export interface WikipediaOptions {
 
 const END_SECTIONS = /^(See also|References|Notes|Citations|Sources|Further reading|External links|Bibliography|Notes and references|Footnotes)\s*$/i
 
+/**
+ * Lead sentences often carry a pronunciation/translation parenthesis — "The Eiffel Tower (/ˈaɪfəl/ EYE-fəl; French: Tour Eiffel
+ * [tuʁ ɛfɛl]) is …" — which hides the plain statement from the NLI model. Drop parentheses that contain IPA slashes, square-bracket
+ * IPA, or a "Language:" gloss; keep dates and other parentheses.
+ */
+export function stripPronunciation(line: string): string {
+  return line.replace(/\s*\((?=[^()]*(?:\/[^/\s][^/]*\/|\[[^\]]*\]|\b[A-Z][a-z]+(?: [A-Z][a-z]+)?:\s))[^()]*\)/g, '')
+}
+
 /** Keep prose only: stop at the reference sections and drop heading lines (no sentence punctuation). */
 export function cleanExtract(extract: string): string {
   const keep: string[] = []
@@ -21,7 +30,7 @@ export function cleanExtract(extract: string): string {
     if (!line) continue
     if (END_SECTIONS.test(line)) break
     if (!/[.!?]["')\]]?$/.test(line) && line.split(/\s+/).length < 8) continue // section heading
-    keep.push(line)
+    keep.push(stripPronunciation(line))
   }
   return keep.join('\n')
 }

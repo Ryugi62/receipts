@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { WikipediaSource, cleanExtract } from '../src/adapters/wikipedia'
+import { WikipediaSource, cleanExtract, stripPronunciation } from '../src/adapters/wikipedia'
 
 describe('WikipediaSource', () => {
   it('searches the topic and the claim, fetches plain-text extracts, and caches pages', async () => {
@@ -48,5 +48,15 @@ describe('cleanExtract', () => {
   it('drops headings and everything from References on', () => {
     const x = 'Ada Lovelace was a mathematician.\n\nEarly life\nShe was born in London.\n\nReferences\nSmith, J. (2001).'
     expect(cleanExtract(x)).toBe('Ada Lovelace was a mathematician.\nShe was born in London.')
+  })
+})
+
+describe('stripPronunciation', () => {
+  it('drops IPA / language-gloss parentheses but keeps dates', () => {
+    expect(stripPronunciation('The Eiffel Tower (/ˈaɪfəl/ EYE-fəl; French: Tour Eiffel [tuʁ ɛfɛl]) is a wrought-iron lattice tower in Paris.'))
+      .toBe('The Eiffel Tower is a wrought-iron lattice tower in Paris.')
+    expect(stripPronunciation('Julia Faye Maloney (September 24, 1892 – April 6, 1966) was an actress.'))
+      .toBe('Julia Faye Maloney (September 24, 1892 – April 6, 1966) was an actress.')
+    expect(stripPronunciation('Ra Jong-yil (Korean: 라종일; born 1940) is a diplomat.')).toBe('Ra Jong-yil is a diplomat.')
   })
 })

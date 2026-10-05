@@ -76,3 +76,9 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
   contradicted calls); pick the best balanced accuracy. If none qualifies, relax to Backed ≥ 85 % and say so.
 - Model: ship the model whose chosen setting meets both floors; if both do, the smaller one unless the larger is ≥ 3 points
   better in balanced accuracy on dev. The held-out test run happens once, after this choice is committed.
+
+## 8. Results against the targets (held-out, 2026-10-05 — details docs/eval.md)
+- E1 swapped evidence → "no receipt" ≥ 90 %: **met** (shipped settings 710/712 = 99.7 %; conflicts on unrelated sentences 0/712).
+- E2 balanced accuracy ≥ 0.70 on held-out topics: **missed** — 68.0 % [65.4–70.2] (2,774 facts, 89 topics); "Backed" precision 83.7 %.
+- 0 network calls carry the pasted answer: met (unit test G/W/T 6). No key, no account: met. First check < 60 s with download:
+  met (24 s on the live site, `scripts/smoke-live.mjs`).

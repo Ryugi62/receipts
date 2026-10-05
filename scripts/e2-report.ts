@@ -33,10 +33,10 @@ const systems: System[] = [
   { name: 'plain checker (top sentence + raw NLI label)', part: (c, t, ev) => naiveVerdict(ev.map((e) => toEv(c, t, e, null))) },
   { name: 'flag everything', part: () => ({ label: 'no_receipt', receipts: [], disagreement: false, gated: 0 }) },
 ]
-const verdictOf = (s: System, r: Rec) => (r.parts ? aggregateVerdicts(r.parts.map((p) => s.part(p.text, r.topic, p.ev))) : s.part(r.claim, r.topic, r.ev ?? []))
+const verdictOf = (s: System, r: Rec): Verdict => (r.parts ? aggregateVerdicts(r.parts.map((p) => s.part(p.text, r.topic, p.ev))) : s.part(r.claim, r.topic, r.ev ?? []))
 
 function stats(rs: Rec[], s: System) {
-  let tp = 0, fn = 0, tn = 0, fp = 0, backed = 0, backedS = 0, contra = 0, contraNS = 0, falseConflict = 0, nS = 0
+  let tp = 0, fn = 0, tn = 0, fp = 0, backed = 0, backedS = 0, contra = 0, contraNS = 0, falseConflict = 0, nS = 0, offSubject = 0
   const topics = new Map<string, { n: number; s: number; b: number }>()
   for (const r of rs) {
     const v = verdictOf(s, r).label
@@ -44,7 +44,12 @@ function stats(rs: Rec[], s: System) {
     if (r.label === 'NS') flag ? tp++ : fn++
     else { flag ? fp++ : tn++; nS++; if (v === 'contradicted') falseConflict++ }
     if (v === 'backed') { backed++; if (r.label === 'S') backedS++ }
-    if (v === 'contradicted') { contra++; if (r.label === 'NS') contraNS++ }
+    if (v === 'contradicted') {
+      contra++
+      if (r.label === 'NS') contraNS++
+      const vr = verdictOf(s, r)
+      if (vr.receipts.some((rc) => !aboutSubject(rc.sentence, r.topic, rc.page))) offSubject++
+    }
     const k = r.key.split('|')[0]
     const o = topics.get(k) ?? { n: 0, s: 0, b: 0 }
     o.n++; o.s += r.label === 'S' ? 1 : 0; o.b += v === 'backed' ? 1 : 0
@@ -55,7 +60,7 @@ function stats(rs: Rec[], s: System) {
     n: rs.length, topics: tv.length, bal: (tp / Math.max(1, tp + fn) + tn / Math.max(1, tn + fp)) / 2,
     backedPrec: backed ? backedS / backed : NaN, backed, contraPrec: contra ? contraNS / contra : NaN, contra,
     flagged: (tp + fp) / rs.length, nsRecall: tp / Math.max(1, tp + fn), base: (tp + fn) / rs.length,
-    falseConflict: nS ? falseConflict / nS : NaN,
+    falseConflict: nS ? falseConflict / nS : NaN, offSubject,
     human: tv.reduce((a, o) => a + o.s / o.n, 0) / tv.length, est: tv.reduce((a, o) => a + o.b / o.n, 0) / tv.length,
   }
 }
@@ -79,20 +84,24 @@ const f = (x: number) => (Number.isNaN(x) ? '—' : pct(x))
 const fci = (x: number, c: [number, number]) => `${f(x)} [${f(c[0])}–${f(c[1])}]`
 function table(rs: Rec[], title: string) {
   const out = [`### ${title} — ${rs.length} facts, ${new Set(rs.map((r) => r.key.split('|')[0])).size} topics, ${f(rs.filter((r) => r.label === 'NS').length / rs.length)} of facts not supported by humans`, '',
-    '| System | Balanced accuracy | "Backed" → humans agree | "May conflict" → humans: not supported | False conflicts on human-supported facts | Share flagged | Est. ChatGPT supported (human) |',
-    '|---|---|---|---|---|---|---|']
+    '| System | Balanced accuracy | "Backed" → humans agree | "May conflict" → humans: not supported | False conflicts on human-supported facts | Conflicts resting on a sentence about someone/something else | Share flagged | Est. supported (human) |',
+    '|---|---|---|---|---|---|---|---|']
   for (const s of systems) {
     const m = stats(rs, s)
     const isFlagAll = s.name === 'flag everything'
-    out.push(`| ${s.name} | ${isFlagAll ? f(m.bal) : fci(m.bal, bootstrap(rs, s, 'bal'))} | ${m.backed ? `${fci(m.backedPrec, bootstrap(rs, s, 'backedPrec'))} (n=${m.backed})` : '—'} | ${m.contra ? `${fci(m.contraPrec, bootstrap(rs, s, 'contraPrec'))} (n=${m.contra})` : '—'} | ${isFlagAll ? '0.0%' : fci(m.falseConflict, bootstrap(rs, s, 'falseConflict'))} | ${f(m.flagged)} | ${f(m.est)} (${f(m.human)}) |`)
+    out.push(`| ${s.name} | ${isFlagAll ? f(m.bal) : fci(m.bal, bootstrap(rs, s, 'bal'))} | ${m.backed ? `${fci(m.backedPrec, bootstrap(rs, s, 'backedPrec'))} (n=${m.backed})` : '—'} | ${m.contra ? `${fci(m.contraPrec, bootstrap(rs, s, 'contraPrec'))} (n=${m.contra})` : '—'} | ${isFlagAll ? '0.0%' : fci(m.falseConflict, bootstrap(rs, s, 'falseConflict'))} | ${m.offSubject} | ${f(m.flagged)} | ${f(m.est)} (${f(m.human)}) |`)
   }
   return out.join('\n')
 }
+// Stress test (designed on dev): keep only evidence from pages that are NOT the subject's own article — as if the person had
+// no Wikipedia page, which is common for the less famous things students ask about. Ideal behaviour: few verdicts.
+const otherPagesOnly = (rs: Rec[]): Rec[] => rs.map((r) => ({ ...r, ev: r.ev?.filter((e) => !aboutSubject(e.page, r.topic, null)), parts: r.parts?.map((p) => ({ ...p, ev: p.ev.filter((e) => !aboutSubject(e.page, r.topic, null)) })) }))
 const report = [
   `# E2 ${data} biographies, ${level} level, ${split.toUpperCase()} topics — model ${model}`,
   `Settings frozen on dev: gate ${JSON.stringify(chosen.gate)}, thresholds ${JSON.stringify(chosen.thresholds)}. Intervals: 95 % bootstrap over topics (1,000 resamples).`,
   '', table(recs, `All ${split} topics`), '',
   table(recs.filter((r) => !SEEN.has(r.key.split('|')[0])), `Without the topics used as UI samples during development (${[...SEEN].join(', ')})`),
+  '', table(otherPagesOnly(recs), "Stress test — evidence only from other pages (as if the subject had no article of their own)"),
 ].join('\n')
 console.log(report)
 writeFileSync(file.replace('.jsonl', '.report.md'), report + '\n')

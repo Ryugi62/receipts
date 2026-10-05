@@ -1,13 +1,26 @@
-// Compose docs/eval.md from the committed result files (no number is typed by hand).
+// Compose docs/eval.md: every table is included from docs/results; the short version quotes those tables.
 // Usage: npx tsx scripts/eval-doc.ts
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 
 const inc = (p: string) => (existsSync(p) ? readFileSync(p, 'utf8').trim().replace(/^# .*\n/, '') : `_(not run: ${p})_`)
 const doc = `# How I evaluated Receipts
 
-Three questions, public human-labelled data, no training. Every number below is produced by a script in \`scripts/\`; per-item
+Three questions, public human-labelled data, no training. Every table below is produced by a script in \`scripts/\`; per-item
 results (evidence sentences and model scores) are in \`docs/results/\`. The Wikipedia pages used are published as a release asset
 (\`wiki-cache.tar.gz\`) so the runs can be repeated on the same text.
+
+## The short version (held-out numbers; misses included)
+- **Unrelated sentences:** the small NLI model alone calls them a contradiction 74.3 % of the time; Receipts 0.0 % (E1).
+- **Real ChatGPT answers (2,774 facts, 89 held-out topics):** when Receipts says **Backed**, humans agree 83.7 % (1,119 calls).
+  Balanced accuracy 68.0 % — **below my 70 % target**, and statistically tied with a plain "top sentence + raw model" checker
+  (67.1 %). "May conflict" is weak: 39.7 % of those calls match a human "not supported" label against a 37.0 % base rate, so the
+  app words it as a hint to read the sentence, never as "false".
+- **Where the gate earns its place:** when the subject's own article is not found (stress test), the plain checker based 216
+  conflicts on a sentence about someone or something else; Receipts based 0. With the gate switched off, Receipts' own false
+  conflicts on human-supported facts go from 13.9 % to 30.6 %.
+- **Another chatbot (InstructGPT, 30 test topics):** no better than the plain checker (68.6 % vs 71.4 % balanced accuracy, wide
+  intervals); more false conflicts on true facts (11.2 % vs 4.5 %). The gate does not make the small model a better judge of
+  true facts — it stops it from judging on the wrong evidence.
 
 ## Protocol (what was fixed when)
 1. Dev/test split of FActScore topics by a hash of the name, decided before any result (2/5 dev, 3/5 test). I ran the first 40 of
@@ -20,8 +33,9 @@ results (evidence sentences and model scores) are in \`docs/results/\`. The Wiki
 4. Disclosure: three biographies (Julia Faye, Carlos Santana, Marianne McAndrew) are UI samples I looked at while building — the
    subject rule was motivated by a Julia Faye sentence. Two of them fall in the test split, so every test table is also shown
    without them.
-5. After the test run I added two things that were not tuned on test: batching (speed only) and skipping Wikipedia
-   "(disambiguation)" pages. The cross-generator run (E3) used that final code.
+5. After the test run I changed three things, none tuned on test: batching (speed only), skipping Wikipedia "(disambiguation)"
+   pages, and removing pronunciation/translation parentheses from lead sentences (found on the Eiffel Tower sample I wrote).
+   The E2 tables are from the code at the freeze commit; E3 ran with batching and the disambiguation filter.
 
 ## E1 — Does it read the evidence? (Symmetric FEVER v0.2, 712 test pairs)
 Each claim is checked with its real evidence sentence, and again with an **unrelated** sentence (another pair's evidence). Same

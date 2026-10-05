@@ -6,16 +6,18 @@ const e1 = readFileSync('docs/results/e1-test-nli-deberta-v3-xsmall-q8.md', 'utf
 const e2 = readFileSync('docs/results/e2-fact-test-nli-deberta-v3-xsmall.report.md', 'utf8')
 const row = (text: string, name: string) => text.split('\n').find((l) => l.startsWith(`| ${name}`))!.split('|').map((c) => c.trim())
 const short = (cell: string) => cell.replace(/ \[.*?\]/, '').replace(/ \(n=\d+\)/, '')
-const shipped = row(e1, 'Receipts as shipped'), plain = row(e1, 'plain checker')
-const unrelatedPlain = plain[8].match(/= ([\d.]+%)/)![1], unrelatedShipped = shipped[8].match(/= ([\d.]+%)/)![1]
-const allTest = e2.split('### ')[1]
-const r = row(allTest, 'Receipts'), off = row(allTest, 'same thresholds, gate OFF'), pc = row(allTest, 'plain checker')
-const header = allTest.split('\n')[0]
-const facts = header.match(/— (\d+) facts, (\d+) topics/)!
+const n = (cell: string) => cell.match(/\(n=(\d+)\)/)![1]
+const e1Plain = row(e1, 'plain checker'), e1Ship = row(e1, 'Receipts as shipped')
+const unrelatedPlain = e1Plain[8].match(/= ([\d.]+%)/)![1], unrelatedShipped = e1Ship[8].match(/= ([\d.]+%)/)![1]
+const [, all, , stress] = e2.split('### ')
+const head = all.split('\n')[0].match(/— (\d+) facts, (\d+) topics/)!
+const r = row(all, 'Receipts'), pc = row(all, 'plain checker')
+const rs = row(stress, 'Receipts'), ps = row(stress, 'plain checker')
 const lines = [
-  `Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${unrelatedPlain}</b> of the time; Receipts calls it a conflict <b>${unrelatedShipped}</b> (712 pairs, Symmetric FEVER).`,
-  `On <b>real ChatGPT answers</b> with human labels (FActScore; ${facts[1]} facts, ${facts[2]} held-out topics): when Receipts says <b>Backed</b>, humans agree <b>${short(r[3])}</b>. On facts humans found <b>true</b>, Receipts raises a false conflict <b>${short(r[5])}</b> of the time — without the gate: <b>${short(off[5])}</b>.`,
-  `Balanced accuracy ${short(r[2])} vs ${short(pc[2])} for a plain "top sentence + raw model" checker. Settings were frozen on separate development topics before this run.`,
+  `Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${unrelatedPlain}</b> of the time; Receipts: <b>${unrelatedShipped}</b> (712 pairs, Symmetric FEVER).`,
+  `<b>Real ChatGPT answers</b> with human labels (FActScore; ${Number(head[1]).toLocaleString('en')} facts on ${head[2]} held-out topics): when Receipts says <b>Backed</b>, humans agree <b>${short(r[3])}</b> (${n(r[3])} facts). Everything else is left for you to check. Overall it is about as accurate as a plain "top sentence + raw model" checker (balanced accuracy ${short(r[2])} vs ${short(pc[2])}).`,
+  `When the right article is <b>not</b> found (stress test: other pages only), the plain checker based <b>${ps[6]}</b> conflicts on a sentence about someone or something else; Receipts: <b>${rs[6]}</b>.`,
+  `"May conflict" is a hint, not a verdict: on held-out data only ${short(r[4])} of those calls matched a human "not supported" label (base rate ${all.split('\n')[0].match(/topics, ([\d.]+%)/)![1]}).`,
 ]
 writeFileSync('web/numbers.json', JSON.stringify({ lines }, null, 1) + '\n')
 const md = lines.map((l) => '- ' + l.replace(/<\/?b>/g, '**')).join('\n') + '\n- Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)'
