@@ -1,6 +1,6 @@
 {
   "gate": {
-    "minSimilarity": 0.5,
+    "minSimilarity": 0.4,
     "minSharedTokens": 1,
     "ignoreTopicTokens": true
   },
@@ -10,5 +10,5 @@
     "contradictNeedsSubject": true,
     "entailNeedsSubject": false
   },
-  "devBalanced": 0.691757104851991
+  "devBalanced": 0.7129147336426171
 }

@@ -1,14 +1,14 @@
 {
   "gate": {
     "minSimilarity": 0.5,
-    "minSharedTokens": 0,
+    "minSharedTokens": 2,
     "ignoreTopicTokens": false
   },
   "thresholds": {
-    "entail": 0.9,
+    "entail": 0.6,
     "contradict": 0.97,
     "contradictNeedsSubject": true,
-    "entailNeedsSubject": true
+    "entailNeedsSubject": false
   },
-  "devBalanced": 0.7189075630252101
+  "devBalanced": 0.716533354663254
 }
