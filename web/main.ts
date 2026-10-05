@@ -49,7 +49,7 @@ const deps = {
   ranker: new TransformersRanker(undefined, onProgress),
   nli: new TransformersNli(config.model, 'q8', onProgress),
 }
-const opts: CheckOptions = { topK: 5, gate: config.gate, thresholds: config.thresholds as Thresholds, cleanEvidence: (config as { cleanEvidence?: boolean }).cleanEvidence ?? false }
+const opts: CheckOptions = { topK: (config as { topK?: number }).topK ?? 5, gate: config.gate, thresholds: config.thresholds as Thresholds, cleanEvidence: (config as { cleanEvidence?: boolean }).cleanEvidence ?? false }
 
 // "What now?": copy the answer with sources, or a follow-up question for the chatbot (src/application/report.ts).
 let last: ClaimResult[] = []

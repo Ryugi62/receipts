@@ -8,7 +8,7 @@ import { arg, pct, readJsonl } from './lib'
 
 type Ev = { s: string; page: string; sim: number; en: number; co: number; en2?: number; co2?: number }
 type Rec = { key: string; topic: string | null; claim: string; label: 'S' | 'NS'; ev?: Ev[]; parts?: { text: string; ev: Ev[] }[] }
-type Chosen = { gate: GateConfig; thresholds: Thresholds; cleanEvidence?: boolean }
+type Chosen = { gate: GateConfig; thresholds: Thresholds; cleanEvidence?: boolean; topK?: number }
 const file = arg('file')!
 const title = arg('title', file)!
 const recs = readJsonl(file) as Rec[]
@@ -21,11 +21,11 @@ const toEv = (claim: string, topic: string | null, e: Ev, gate: GateConfig, clea
   inference: clean && e.en2 !== undefined ? { entail: e.en2, contradict: e.co2!, neutral: Math.max(0, 1 - e.en2 - e.co2!) } : { entail: e.en, contradict: e.co, neutral: Math.max(0, 1 - e.en - e.co) },
 })
 type Part = (claim: string, topic: string | null, ev: Ev[]) => Verdict
-const R = (c: Chosen, clean: boolean): Part => (cl, t, ev) => decideVerdict(ev.map((e) => toEv(cl, t, e, c.gate, clean)), c.thresholds)
+const R = (c: Chosen, clean: boolean, k = 5): Part => (cl, t, ev) => decideVerdict(ev.slice(0, k).map((e) => toEv(cl, t, e, c.gate, clean)), c.thresholds)
 const systems: [string, Part][] = [
-  [`Receipts v3 (${v3.cleanEvidence ? 'cleaned evidence' : 'v2 settings kept'}, frozen on dev)`, R(v3, !!v3.cleanEvidence)],
+  [`Receipts v3 (top ${v3.topK ?? 5}, ${v3.cleanEvidence ? 'cleaned' : 'raw'} evidence, frozen on dev)`, R(v3, !!v3.cleanEvidence, v3.topK ?? 5)],
   ['Receipts v2 (raw evidence)', R(v2, false)],
-  ['plain checker (top sentence + raw NLI label)', (cl, t, ev) => naiveVerdict(ev.map((e) => toEv(cl, t, e, OFF, false)))],
+  ['plain checker (top sentence + raw NLI label)', (cl, t, ev) => naiveVerdict(ev.slice(0, 5).map((e) => toEv(cl, t, e, OFF, false)))],
 ]
 const verdict = (p: Part, r: Rec) => (r.parts ? aggregateVerdicts(r.parts.map((x) => p(x.text, r.topic, x.ev))) : p(r.claim, r.topic, r.ev ?? [])).label
 type Pre = { topic: string; label: 'S' | 'NS'; v: string[] }

@@ -12,5 +12,6 @@
   "conflictFromTopOnly": true,
   "disagreement": "contradicted"
  },
- "cleanEvidence": false
+ "cleanEvidence": false,
+ "topK": 5
 }
