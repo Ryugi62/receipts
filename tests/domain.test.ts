@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { splitSentences, splitClaims, guessTopic } from '../src/domain/claims'
 import { passesRelevanceGate, contentTokens, lexicalPrefilter } from '../src/domain/gate'
-import { decideVerdict, aggregateVerdicts, DEFAULT_THRESHOLDS, type ScoredEvidence } from '../src/domain/verdict'
+import { decideVerdict, aggregateVerdicts, naiveVerdict, DEFAULT_THRESHOLDS, type ScoredEvidence } from '../src/domain/verdict'
 
 describe('splitSentences', () => {
   it('does not split on abbreviations, initials or decimals', () => {
@@ -160,5 +160,14 @@ describe('aboutSubject', () => {
   it('a backing sentence about someone else does not back the claim when asked', () => {
     const e = { ...ev('Faithfull was an English singer.', 0.97, 0.01), mentionsSubject: false }
     expect(decideVerdict([e], { ...DEFAULT_THRESHOLDS, entailNeedsSubject: true }).label).toBe('no_receipt')
+  })
+})
+
+describe('naiveVerdict (baseline)', () => {
+  it('takes the most similar sentence and its NLI label, ignoring the gate', () => {
+    const top = { ...ev("Faye's father died before 1901.", 0.01, 0.95, false), similarity: 0.9 }
+    const other = { ...ev('Faye died on April 6, 1966.', 0.9, 0.01), similarity: 0.5 }
+    expect(naiveVerdict([other, top]).label).toBe('contradicted')
+    expect(decideVerdict([other, top], DEFAULT_THRESHOLDS).label).toBe('backed')
   })
 })

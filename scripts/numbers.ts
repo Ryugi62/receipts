@@ -1,23 +1,24 @@
-// Build web/numbers.json (the "How do we know" list on the page) from the committed result files, so the page
-// never shows a number that is not in docs/results. Usage: npx tsx scripts/numbers.ts
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+// Build web/numbers.json (the "How do we know" list on the page) and the README numbers block from committed result files,
+// so no number on the page or in the README is typed by hand. Usage: npx tsx scripts/numbers.ts
+import { readFileSync, writeFileSync } from 'node:fs'
 
-const read = (p: string) => (existsSync(p) ? readFileSync(p, 'utf8') : '')
-const grab = (text: string, re: RegExp) => text.match(re)?.[1] ?? null
-
-const naive = read('docs/results/e1-test-nli-deberta-v3-xsmall-q8.md')
-const e2 = read('docs/results/e2-fact-nli-deberta-v3-xsmall-test.md')
-const lines: string[] = []
-const rawContra = grab(naive, /raw model says "contradicted": (\d+\/\d+ = [\d.]+%)/)
-const gated = grab(naive, /no_receipt WITH relevance gate: (\d+\/\d+ = [\d.]+%)/)
-if (rawContra && gated)
-  lines.push(`Given an <b>unrelated</b> sentence, the small model on its own says "contradiction" <b>${rawContra}</b> of the time. With Receipts' relevance gate the answer is "no receipt" <b>${gated}</b> (712 pairs, Symmetric FEVER test set, Schuster et al. 2019).`)
-const testPart = e2.split('## TEST')[1] ?? ''
-const backed = grab(testPart, /says \*\*Backed\*\*, humans agree: (\d+\/\d+ = [\d.]+%)/)
-const caught = grab(testPart, /Human "not supported" caught: (\d+\/\d+ = [\d.]+%)/)
-const n = grab(testPart, /— (\d+) claims/)
-if (backed && caught)
-  lines.push(`On <b>real ChatGPT answers</b> with human fact labels (FActScore, Min et al. 2023; ${n} facts on held-out topics, live Wikipedia): when Receipts says <b>Backed</b>, the human annotators agree <b>${backed}</b>; of the facts humans marked not supported, Receipts flags <b>${caught}</b> for checking.`)
-lines.push('Settings (relevance bar, thresholds) were chosen on separate development topics and then frozen before the held-out run.')
+const e1 = readFileSync('docs/results/e1-test-nli-deberta-v3-xsmall-q8.md', 'utf8')
+const e2 = readFileSync('docs/results/e2-fact-test-nli-deberta-v3-xsmall.report.md', 'utf8')
+const row = (text: string, name: string) => text.split('\n').find((l) => l.startsWith(`| ${name}`))!.split('|').map((c) => c.trim())
+const short = (cell: string) => cell.replace(/ \[.*?\]/, '').replace(/ \(n=\d+\)/, '')
+const shipped = row(e1, 'Receipts as shipped'), plain = row(e1, 'plain checker')
+const unrelatedPlain = plain[8].match(/= ([\d.]+%)/)![1], unrelatedShipped = shipped[8].match(/= ([\d.]+%)/)![1]
+const allTest = e2.split('### ')[1]
+const r = row(allTest, 'Receipts'), off = row(allTest, 'same thresholds, gate OFF'), pc = row(allTest, 'plain checker')
+const header = allTest.split('\n')[0]
+const facts = header.match(/— (\d+) facts, (\d+) topics/)!
+const lines = [
+  `Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${unrelatedPlain}</b> of the time; Receipts calls it a conflict <b>${unrelatedShipped}</b> (712 pairs, Symmetric FEVER).`,
+  `On <b>real ChatGPT answers</b> with human labels (FActScore; ${facts[1]} facts, ${facts[2]} held-out topics): when Receipts says <b>Backed</b>, humans agree <b>${short(r[3])}</b>. On facts humans found <b>true</b>, Receipts raises a false conflict <b>${short(r[5])}</b> of the time — without the gate: <b>${short(off[5])}</b>.`,
+  `Balanced accuracy ${short(r[2])} vs ${short(pc[2])} for a plain "top sentence + raw model" checker. Settings were frozen on separate development topics before this run.`,
+]
 writeFileSync('web/numbers.json', JSON.stringify({ lines }, null, 1) + '\n')
+const md = lines.map((l) => '- ' + l.replace(/<\/?b>/g, '**')).join('\n') + '\n- Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)'
+const readme = readFileSync('README.md', 'utf8').replace(/<!-- NUMBERS -->[\s\S]*?<!-- \/NUMBERS -->/, `<!-- NUMBERS -->\n${md}\n<!-- /NUMBERS -->`)
+writeFileSync('README.md', readme)
 console.log(lines.join('\n'))

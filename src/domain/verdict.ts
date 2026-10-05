@@ -77,3 +77,15 @@ export function aggregateVerdicts(parts: Verdict[]): Verdict & { backedParts: nu
   if (parts.length && backedParts === parts.length) return { label: 'backed', receipts: parts.flatMap((p) => p.receipts), disagreement: false, gated, backedParts }
   return { label: 'no_receipt', receipts: [], disagreement: false, gated, backedParts }
 }
+
+/**
+ * Baseline: what a simple "retrieve the top sentence, take the NLI label" checker would say — no gate, no thresholds.
+ * Shown next to Receipts' verdict when they differ, and used as a baseline in the evaluation.
+ */
+export function naiveVerdict(evidence: ScoredEvidence[]): Verdict {
+  const top = [...evidence].sort((a, b) => b.similarity - a.similarity)[0]
+  if (!top) return { label: 'no_receipt', receipts: [], disagreement: false, gated: 0 }
+  const { entail, contradict, neutral } = top.inference
+  const label: VerdictLabel = entail >= contradict && entail >= neutral ? 'backed' : contradict >= neutral ? 'contradicted' : 'no_receipt'
+  return { label, receipts: label === 'no_receipt' ? [] : [toReceipt(top)], disagreement: false, gated: evidence.length }
+}

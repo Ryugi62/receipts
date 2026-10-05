@@ -1,8 +1,7 @@
 // Infrastructure: browser UI wiring. All logic lives in src/.
 import { env } from '@huggingface/transformers'
-import { checkAnswer, scoreEvidence, type ClaimResult, type CheckOptions } from '../src/application/checkAnswer'
-import { decideVerdict } from '../src/domain/verdict'
-import { contentTokens } from '../src/domain/gate'
+import { checkAnswer, type ClaimResult, type CheckOptions, type PartResult } from '../src/application/checkAnswer'
+import { naiveVerdict } from '../src/domain/verdict'
 import { WikipediaSource } from '../src/adapters/wikipedia'
 import { TransformersNli, TransformersRanker } from '../src/adapters/transformers'
 import config from './config.json'
@@ -58,15 +57,17 @@ const LABEL: Record<string, string> = { backed: 'Backed', contradicted: 'May con
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const p = (x: number) => `${Math.round(100 * x)}%`
 
-// Unrelated sentences for the swap test — the one sharing the fewest words with the claim is used.
-const UNRELATED = [
-  'The Amazon River flows through Peru, Colombia and Brazil before reaching the Atlantic Ocean.',
-  'Photosynthesis converts light energy into chemical energy stored in glucose.',
-  'The Great Barrier Reef is the largest coral reef system in the world.',
-]
-function pickUnrelated(claim: string) {
-  const c = new Set(contentTokens(claim))
-  return UNRELATED.map((s) => ({ s, k: contentTokens(s).filter((w) => c.has(w)).length })).sort((a, b) => a.k - b.k)[0].s
+/** When a plain "top sentence + raw model" checker would answer differently, say so and why Receipts did not. */
+function naiveNote(pt: PartResult): string {
+  const nv = naiveVerdict(pt.evidence)
+  if (nv.label === pt.verdict.label || !nv.receipts.length) return ''
+  const s = pt.evidence.find((e) => e.sentence === nv.receipts[0].sentence)!
+  const why = !s.passesGate
+    ? 'that sentence is not close enough to this claim'
+    : s.mentionsSubject === false && nv.label === 'contradicted'
+      ? 'that sentence is about someone or something else'
+      : 'the model was not sure enough'
+  return `<p class="naive">A plain checker (top sentence + raw model) would say <b>${LABEL[nv.label]}</b> because of “${esc(s.sentence.slice(0, 160))}${s.sentence.length > 160 ? "…" : ""}” — Receipts set it aside: ${why}.</p>`
 }
 
 function receiptHtml(label: string, receipts: { sentence: string; url: string; page: string }[]) {
@@ -86,7 +87,7 @@ function render(r: ClaimResult, el: HTMLElement) {
       return `<div class="part">
         ${multi ? `<p class="part-text"><span class="pill ${pt.verdict.label}">${LABEL[pt.verdict.label]}</span> ${esc(pt.text)}</p>` : ''}
         ${receiptHtml(pt.verdict.label, pt.verdict.receipts.slice(0, 1)) || (multi ? '' : '<p class="muted small">No sentence on Wikipedia clearly backs or contradicts this. Worth checking yourself.</p>')}
-        <div class="row"><button class="ghost" data-swap="${i}">Swap test</button><span class="swap muted" data-swap-out="${i}"></span></div>
+        ${naiveNote(pt)}
         <details><summary>Why? (top ${pt.evidence.length} sentences)</summary>
           <table><tr><th>Sentence</th><th>backs</th><th>contradicts</th><th>relevant?</th></tr>${rows}</table></details>
       </div>`
@@ -99,21 +100,6 @@ function render(r: ClaimResult, el: HTMLElement) {
     <p class="claim-text">${esc(r.claim.original)}</p>
     ${multi ? `<p class="rewritten">checked as ${r.parts.length} smaller claims:</p>` : r.claim.text !== r.claim.original ? `<p class="rewritten">checked as: “${esc(r.claim.text)}”</p>` : ''}
     ${partsHtml}`
-  el.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      const i = Number(b.dataset.swap)
-      const text = r.parts[i].text
-      const out = el.querySelector(`[data-swap-out="${i}"]`)!
-      b.disabled = true
-      out.textContent = 'Running…'
-      const s = pickUnrelated(text)
-      const scored = await scoreEvidence(text, [{ sentence: s, page: 'unrelated', url: '' }], deps, { ...opts, topK: 1 }, r.claim.topic)
-      const gated = decideVerdict(scored, opts.thresholds)
-      const raw = scored[0].inference
-      out.innerHTML = `Given “${esc(s)}” → raw model: backs ${p(raw.entail)}, contradicts ${p(raw.contradict)} · Receipts: <b>${LABEL[gated.label]}</b>${gated.label === 'no_receipt' ? ' ✓ it read the evidence' : ''}`
-      b.disabled = false
-    }),
-  )
 }
 
 btn.addEventListener('click', async () => {

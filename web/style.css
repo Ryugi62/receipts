@@ -58,3 +58,6 @@ footer a { color: inherit; }
 .part { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .part:first-of-type { border-top: 0; padding-top: 0; }
 .part-text { margin: 4px 0; font-size: 15px; }
+.naive { font-size: 13px; color: var(--muted); background: var(--card); border-radius: 10px; padding: 8px 10px; margin: 8px 0 0; }
+.naive b { color: var(--fg); }
+.legend .pill { font-weight: 600; background: transparent !important; padding: 0 8px 0 0; }

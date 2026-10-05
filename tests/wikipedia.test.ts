@@ -32,6 +32,18 @@ describe('WikipediaSource', () => {
   })
 })
 
+describe('pagesFor', () => {
+  it('never uses disambiguation pages as evidence', async () => {
+    const fake = async (u: string) => {
+      const p = new URL(u).searchParams
+      if (p.get('list') === 'search') return { ok: true, status: 200, json: async () => ({ query: { search: [{ title: 'Tour Eiffel (disambiguation)' }, { title: 'Eiffel Tower' }] } }) }
+      return { ok: true, status: 200, json: async () => ({ query: { pages: [{ title: p.get('titles'), extract: 'Text here is long enough.' }] } }) }
+    }
+    const pages = await new WikipediaSource({ fetch: fake }).pagesFor({ claim: 'The Eiffel Tower is in Paris.', topic: 'Eiffel Tower' })
+    expect(pages.map((x) => x.title)).toEqual(['Eiffel Tower'])
+  })
+})
+
 describe('cleanExtract', () => {
   it('drops headings and everything from References on', () => {
     const x = 'Ada Lovelace was a mathematician.\n\nEarly life\nShe was born in London.\n\nReferences\nSmith, J. (2001).'

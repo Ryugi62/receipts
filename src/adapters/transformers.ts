@@ -2,7 +2,7 @@
 import type { NliModel, Ranker } from '../application/checkAnswer'
 import type { Inference } from '../domain/verdict'
 
-export const NLI_MODEL = 'Xenova/DeBERTa-v3-base-mnli-fever-anli'
+export const NLI_MODEL = 'Xenova/nli-deberta-v3-xsmall'
 export const EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2'
 
 type Lib = typeof import('@huggingface/transformers')
@@ -37,13 +37,15 @@ export class TransformersNli implements NliModel {
     })))
   }
   async infer(pairs: { premise: string; hypothesis: string }[]): Promise<Inference[]> {
+    if (!pairs.length) return []
     const { tok, model } = await this.init()
+    // One batched forward pass for all pairs (padding to the longest); ~3–5× faster than one pair at a time.
+    const enc = await tok(pairs.map((p) => p.premise), { text_pair: pairs.map((p) => p.hypothesis), padding: true, truncation: true, max_length: 256 })
+    const { logits } = await model(enc)
+    const [n, k] = logits.dims as number[]
+    const data = logits.data as Float32Array
     const out: Inference[] = []
-    for (const p of pairs) {
-      const enc = await tok(p.premise, { text_pair: p.hypothesis, truncation: true, max_length: 256 })
-      const { logits } = await model(enc)
-      out.push(toInference(Array.from(logits.data as Float32Array), model.config.id2label))
-    }
+    for (let i = 0; i < n; i++) out.push(toInference(Array.from(data.subarray(i * k, (i + 1) * k)), model.config.id2label))
     return out
   }
 }

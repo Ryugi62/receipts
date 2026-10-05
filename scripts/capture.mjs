@@ -1,5 +1,5 @@
 // UI acceptance captures + live smoke (real models, real Wikipedia): 390 and 1280 px, input and result screens,
-// plus a horizontal-overflow check and the swap test on the first claim.
+// plus a horizontal-overflow check and the plain-checker notes.
 // Usage: npm run build && node scripts/capture.mjs [sample]  → docs/screens/*.png
 import { preview } from 'vite'
 import { chromium } from 'playwright'
@@ -29,9 +29,8 @@ for (const width of [1280, 390]) {
   const summary = await page.textContent('#sum-big')
   const labels = await page.$$eval('.claim .pill', (els) => els.map((e) => e.textContent))
   log.push(`${width}px: ${summary} in ${secs} s — ${labels.join(' | ')}`)
-  await page.click('.claim [data-swap]')
-  await page.waitForFunction(() => document.querySelector('.claim .swap')?.textContent?.includes('Receipts:'), null, { timeout: 120000 })
-  log.push(`${width}px swap: ${await page.textContent('.claim .swap')}`)
+  const notes = await page.$$eval('.naive', (els) => els.map((e) => e.textContent.trim()))
+  log.push(`${width}px plain-checker notes: ${notes.length}${notes[0] ? ' — e.g. ' + notes[0] : ''}`)
   await page.addStyleTag({ content: '.cta-bar{display:none!important}' })
   await shot(`2-result`)
   await page.close()

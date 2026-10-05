@@ -41,18 +41,19 @@
     <section id="summary" class="summary" hidden>
       <p class="big" id="sum-big"></p>
       <p id="sum-line"></p>
-      <div class="legend"><span class="pill backed">Backed</span><span class="pill contradicted">May conflict</span><span class="pill no_receipt">No receipt</span></div>
+      <p class="legend small"><span class="pill backed">● Backed</span><span class="pill contradicted">● May conflict</span><span class="pill no_receipt">● No receipt = check it yourself</span></p>
     </section>
 
     <section id="results" class="results"></section>
 
     <section class="how card">
       <h2>How do we know it reads the evidence?</h2>
-      <p>Off-the-shelf language-inference models have a known shortcut: they often call an <i>unrelated</i> sentence a
-        "contradiction". A naive fact-checker would then tell you a true fact is false. Receipts adds a relevance gate and
-        we measured it on public, human-labelled data:</p>
+      <p>Small language-inference models are over-confident on sentences that are not about the claim: they often call
+        them a "contradiction". A plain fact-checker would then tell you a true fact is false. Receipts only lets a sentence
+        decide if it is close to the claim, shares a real word with it, and (for a conflict) is about the same subject.
+        Measured on public, human-labelled data:</p>
       <ul id="how-numbers"></ul>
-      <p class="muted small">Use the <b>Swap test</b> on any claim to see it yourself: we feed the claim an unrelated sentence and the verdict must become "no receipt".</p>
+      <p class="muted small">Look for the grey notes under a claim: they show what a plain "top sentence + raw model" checker would have said, and why Receipts set that sentence aside.</p>
       <details>
         <summary>What Receipts is not</summary>
         <p class="small">Wikipedia is not the truth, and "no receipt" does not mean false — it means "go check this one". Receipts uses pretrained models only (no training) and the thresholds were chosen on separate development data. Full method, numbers and misses: <a href="https://github.com/Ryugi62/receipts/blob/main/docs/eval.md" target="_blank" rel="noopener">docs/eval.md</a>.</p>

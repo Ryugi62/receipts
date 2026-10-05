@@ -77,7 +77,7 @@ export class WikipediaSource implements EvidenceSource {
     const titles: string[] = []
     if (query.topic) titles.push(...(await this.searchTitles(query.topic, 1)))
     titles.push(...(await this.searchTitles(query.claim, this.opts.searchPages ?? 2)))
-    const unique = [...new Set(titles)].slice(0, 3)
+    const unique = [...new Set(titles)].filter((t) => !/\(disambiguation\)/i.test(t)).slice(0, 3)
     const pages = await Promise.all(unique.map((t) => this.page(t)))
     return pages.filter((p): p is SourcePage => !!p)
   }

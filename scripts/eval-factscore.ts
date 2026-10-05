@@ -13,7 +13,8 @@ import { arg, bucket, cachedFetch, readJsonl } from './lib'
 const split = arg('split', 'dev')!
 const level = arg('level', 'fact')!
 const limit = Number(arg('limit', '100000'))
-const docs = (readJsonl('data/factscore/ChatGPT.jsonl') as any[]).filter((d) => d.annotations && d.annotations.length)
+const data = arg('data', 'ChatGPT')!
+const docs = (readJsonl(`data/factscore/${data}.jsonl`) as any[]).filter((d) => d.annotations && d.annotations.length)
 // 2 of 5 hash buckets = dev topics, 3 of 5 = test topics (decided before looking at any result).
 const mine = docs.filter((d) => (bucket(d.topic, 5) < 2 ? 'dev' : 'test') === split).slice(0, limit)
 
@@ -22,7 +23,7 @@ const modelId = arg('model', NLI_MODEL)!
 const deps = { nli: new TransformersNli(modelId, 'q8'), ranker: new TransformersRanker() }
 const opts = { ...DEFAULT_OPTIONS, topK: 5 }
 mkdirSync('docs/results', { recursive: true })
-const out = `docs/results/e2-${level}-${split}-${modelId.split('/')[1]}.jsonl`
+const out = `docs/results/e2-${level}-${split}-${modelId.split('/')[1]}${data === 'ChatGPT' ? '' : '-' + data}.jsonl`
 const done = new Set(existsSync(out) ? readFileSync(out, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l).key) : [])
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim()
