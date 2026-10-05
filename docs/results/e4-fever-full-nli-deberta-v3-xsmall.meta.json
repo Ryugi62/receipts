@@ -1,0 +1,6 @@
+{
+  "claims": 355,
+  "model": "Xenova/nli-deberta-v3-xsmall",
+  "runSeconds": 720,
+  "when": "2026-10-05T18:08:28.204Z"
+}

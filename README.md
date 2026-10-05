@@ -8,16 +8,18 @@ each one, and a language-inference model **running in your browser** marks every
 [ML Empowerment Build Challenge 3.0](https://ml-build-challenge-3.devpost.com/)
 
 <!-- NUMBERS -->
-- Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.3%** (712 pairs, Symmetric FEVER).
-- On a **fresh held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts), Receipts raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.
-- Balanced accuracy 70.7% vs 66.6%; "Backed" is as precise as the simpler checker (94.1%) and covers more facts. Settings were frozen on separate development topics before this run.
-- Use it as a filter: on the same held-out set it marks **55.7%** of facts Backed (94.1% of those are right), and **79.2%** of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep 44.3%. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.
+- On a **held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts; new answers, though 30 of the 35 people also appear in earlier test topics), Receipts raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.
+- Use it as a filter: on the same set it marks **55.7%** of facts Backed (94.1% of those are right), and **79.2%** of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep 44.3%. Balanced accuracy 70.7% vs 66.6%; settings were frozen on separate development topics before this run.
+- Beyond biographies — the app's whole path on 355 FEVER claims (films, places, science, sport…): balanced accuracy **75.5%** vs 68.4% for the simpler checker, false "may conflict" on true claims 5.4% vs 18.4%; when it says "May conflict" it is right 88.1% of the time.
+- Limits: on whole raw paragraphs through the app it ties the simpler checker (55.2% vs 54.9%, 375 sentences) and backs only 13.0% of the sentences humans support. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.
+- Easy synthetic test: given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time, 48.2% with our thresholds but no gate, and Receipts **0.3%** (712 pairs, Symmetric FEVER).
 - Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)
 <!-- /NUMBERS -->
 
 ## Why
-Students paste AI answers into homework every day. Chatbots sound sure even when a date or a name is wrong, and checking
-every sentence by hand is slow, so most people don't. Receipts does the boring part — it finds the one sentence on
+About a quarter of U.S. teens (26 %, up from 13 % a year earlier) say they have used ChatGPT for schoolwork, and 54 % say it
+is fine to use it to research new topics ([Pew Research Center, 2025-01-15](https://www.pewresearch.org/short-reads/2025/01/15/about-a-quarter-of-us-teens-have-used-chatgpt-for-schoolwork-double-the-share-in-2023/)).
+Chatbots sound sure even when a date or a name is wrong, and checking every sentence by hand is slow, so most people don't. Receipts does the boring part — it finds the one sentence on
 Wikipedia that backs or contradicts each claim — and leaves the judgement to you.
 
 ## The failure I had to beat
@@ -31,6 +33,16 @@ Two rules fix most of it, and the evaluation shows which does what:
   evidence is about something else (unrelated sentences: 48.2 % called a conflict without it, 0.3 % with it).
 The price: Receipts rarely catches a mistake by itself; it tells you which claims are backed and which to check.
 When a plain "top sentence + raw model" checker would have answered differently, the app shows that answer and why.
+
+For teachers: a 15-minute classroom activity built on the app — [docs/classroom.md](docs/classroom.md).
+
+## Related work, and what is different here
+Checking claims against Wikipedia with an inference model is an established research setup: FEVER (Thorne et al., 2018),
+FActScore (Min et al., 2023, whose labels I evaluate against), SummaC / AlignScore-style consistency checkers. Receipts does not
+claim a new model. What it adds: (1) it runs entirely in a student's browser with no key, account or server; (2) an **asymmetric
+decision rule** — any good sentence may back a claim, only the single most relevant one may raise a conflict — measured to cut
+false "this is wrong" calls on true facts from 12.9 % to 3.6 % on held-out answers; (3) it shows what a plain checker would have
+said and why it was set aside; (4) it turns "no receipt" into a next step (a cited draft, or a question back to the chatbot).
 
 ## How it works
 1. **Split** the answer into sentences, resolve "he/she/it" to the topic, and break long sentences into atomic parts

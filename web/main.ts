@@ -51,6 +51,19 @@ const deps = {
 }
 const opts: CheckOptions = { topK: (config as { topK?: number }).topK ?? 5, gate: config.gate, thresholds: config.thresholds as Thresholds, cleanEvidence: (config as { cleanEvidence?: boolean }).cleanEvidence ?? false }
 
+// Start downloading the two models as soon as the student shows intent (focus or a sample click), not on the first check.
+let warmed = false
+const warm = () => {
+  if (warmed) return
+  warmed = true
+  statusBox.hidden = false
+  statusText.textContent = 'Loading the models into your browser (first time only)…'
+  Promise.all([deps.nli.infer([{ premise: 'Warm up.', hypothesis: 'Warm up.' }]), deps.ranker.similarities('warm up', ['warm up'])])
+    .then(() => { if (!btn.disabled) statusBox.hidden = true })
+    .catch(() => { warmed = false; statusBox.hidden = true })
+}
+answerEl.addEventListener('focus', warm, { once: true })
+
 // "What now?": copy the answer with sources, or a follow-up question for the chatbot (src/application/report.ts).
 let last: ClaimResult[] = []
 const note = $('copy-note')
@@ -74,6 +87,7 @@ for (const line of numbers.lines as string[]) {
 
 document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
   b.addEventListener('click', () => {
+    warm()
     const k = b.dataset.sample as keyof typeof samples
     answerEl.value = samples[k]
     topicEl.value = k

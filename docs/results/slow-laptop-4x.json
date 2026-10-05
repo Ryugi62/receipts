@@ -1,0 +1,19 @@
+{
+ "cpuSlowdown": 4,
+ "coldWithDownload": {
+  "sample": "Eiffel Tower",
+  "firstClaimS": 21.2,
+  "allS": 44.4,
+  "summary": "3 of 4 claims backed",
+  "claims": 4
+ },
+ "warmCached": {
+  "sample": "Julia Faye",
+  "firstClaimS": 37.9,
+  "allS": 65.9,
+  "summary": "2 of 11 claims backed",
+  "claims": 6
+ },
+ "when": "2026-10-05T18:11:14.272Z",
+ "note": "fresh profile; network = this machine’s connection; laptop CPU slowed with Emulation.setCPUThrottlingRate"
+}

@@ -24,11 +24,19 @@ Public, human-labelled data; no training; every table below is produced by a scr
 - **As a filter (triage view):** on the fresh set it marks 55.7 % of facts Backed (94.1 % right), and 79.2 % of the facts humans
   could not support stay in the "check yourself" pile; skipping the same share at random would keep 44.3 %. The plain checker keeps
   84.3 % but lets you skip only 43.7 %.
+- **Beyond biographies (E4, SPEC §12, run once with the shipped settings):** the app's whole path — topic guess, splitter, live
+  Wikipedia, model, gate — on 355 original FEVER claims: balanced accuracy 75.5 % vs 68.4 % for the plain checker (paired
+  difference +7.0 points [4.6, 9.5]); false "May conflict" on true claims 5.4 % vs 18.4 %; "May conflict" is right 88.1 % of the
+  time but names only 28.4 % of the false claims (plain checker: 70.7 %).
+- **The gate's cost on real refutations (E1):** with the correct FEVER evidence sentence handed over, shipped Receipts decides
+  55.9 % of claims (97.5 % right when it decides) and calls 49.2 % of refutations a conflict, vs 89.3 % for the plain checker.
+- **On a slowed laptop** (Chrome CPU throttled 4×, fresh profile, scripts/slow-laptop.mjs): first result 21 s and all four claims
+  44 s on the first visit including the model download; a six-sentence answer 66 s once the models are cached.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
 - **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
   reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
   fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
-  (−0.3 points [−2.7, 1.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
+  (Receipts − plain = +0.3 points [−2.0, 2.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
 
 ## History and protocol
 1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
@@ -46,7 +54,12 @@ Public, human-labelled data; no training; every table below is produced by a scr
    subject name) plus two options chosen on dev only — evidence clean-up and wider reading. Neither cleared the +1.0-point bar.
    H1 was run once after the choice was pushed, on the 49 ChatGPT test topics never run at sentence level. Disclosure: while
    diagnosing I looked at two items of the earlier E-full set, whose 40 topics are excluded from H1.
-6. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
+6. **Server-side timestamps.** Every push runs the site's GitHub Actions workflow, and GitHub records when
+   (https://github.com/Ryugi62/receipts/actions): §9 pre-registration 2026-10-05 10:45:09Z → v2 settings frozen 10:48:38Z →
+   held-out results 12:10:44Z; §11 pre-registration 16:56:19Z → §11.1 17:07:00Z → selection pushed 17:47:35Z → H1 report
+   17:50:42Z; §12 (E4) pushed before its run. Disclosure: the H1 run that stores raw model scores finished at 17:41Z, before the
+   selection was pushed; the selection script reads only the dev file, and the H1 report was produced after the push.
+7. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
    Receipts; it is kept in the tables for the baselines only and is not used as evidence.
 
 ## Revision 3 — pre-registered options that did not clear the bar (dev), and H1
@@ -56,10 +69,20 @@ ${inc('docs/results/v3-selection-topk.md')}
 
 ${inc('docs/results/h1-report.md')}
 
+## E4 — beyond biographies: the whole app path on original FEVER claims (SPEC §12)
+${inc('docs/results/e4-report.md')}
+
+## Slowed-laptop timing
+\`\`\`
+${existsSync('docs/results/slow-laptop-4x.json') ? readFileSync('docs/results/slow-laptop-4x.json', 'utf8').trim() : ''}
+\`\`\`
+
 ## Triage view (share you can skip vs errors left in the "check" pile)
 ${inc('docs/results/triage-perplexity.md')}
 
 ${inc('docs/results/triage-chatgpt.md')}
+
+${inc('docs/results/perplexity-nonoverlap.md')}
 
 ## Revision 2 — component ablation
 ${inc('docs/results/ablation-v2.md')}

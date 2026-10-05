@@ -144,7 +144,7 @@ the splitter cuts "Quintus Sosius Senecio (fl." at the abbreviation; claims carr
 - Wider reading: best arm top 5 + cleaned evidence 73.5 % vs v2 73.0 % on the same dev run; top 8 / top 10 ≤ 73.1 % → below the
   +1.0 bar; **shipped settings = v2 + the two bug fixes** (docs/results/v3-selection*.md).
 - H1 (run once, after the choice was pushed): the whole app path on 49 fresh ChatGPT test topics, 375 sentences — balanced
-  55.2 % [51.6–58.4] vs plain checker 54.9 % (paired −0.3 points [−2.7, 1.8]); backs 13.0 % of human-supported sentences; false
+  55.2 % [51.6–58.4] vs plain checker 54.9 % (Receipts − plain = +0.3 points, paired 95 % CI [−2.0, 2.8]; intervals re-seeded on 10-06 to match e2-report); backs 13.0 % of human-supported sentences; false
   conflicts 1.7 % vs 9.6 %. Success criterion of §11 (v3 − v2 > 0) is void because v3 = v2; the sentence-level weakness stands.
 - Triage view added to every set (docs/results/triage-*.md, h1-report.md). New student-facing step: "What now?" — copy the answer
   with a Wikipedia footnote on every backed sentence and "[check: …]" on the rest, or copy a follow-up asking the chatbot for a

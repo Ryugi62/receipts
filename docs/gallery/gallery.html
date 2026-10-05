@@ -30,21 +30,22 @@
 <section id="thumb">
   <p class="eyebrow">Receipts</p>
   <h1>Ask an AI answer<br>for its receipts.</h1>
-  <p>Every claim checked against Wikipedia, in your browser — with the sentence behind each verdict.</p>
+  <p>Every claim checked against Wikipedia, in your browser — with the sentence behind each verdict, and a next step for the rest.</p>
   <div style="margin-top:28px"><span class="pill pb">Backed</span><span class="pill pc">May conflict</span><span class="pill pn">No receipt</span></div>
   <blockquote>Answer: “…completed in <b>1899</b>.” &nbsp;→&nbsp; <b>May conflict</b> · Wikipedia: “…designed and built the tower from 1887 to <b>1889</b>.”</blockquote>
   <p style="font-size:18px;margin-top:10px">(from the app, on a sample paragraph with one planted mistake)</p>
+  <p style="font-size:20px;margin-top:22px;color:#333d4b">Held-out human-labelled answers: false “may conflict” on true facts <b>{{OURFC}}</b> vs <b>{{PLAINFC}}</b> for a simple checker.</p>
   <p class="src">No account · no API key · no training · open source (MIT)</p>
 </section>
 <section id="numbers">
-  <h2>It won’t judge on the wrong sentence — measured</h2>
+  <h2>It won’t tell you a true fact is false — measured on held-out answers</h2>
   <div class="row">
-    <div class="stat bad"><p class="big">{{RAW}}</p><p>of <b>unrelated</b> sentences called a “contradiction” by the small model on its own</p></div>
-    <div class="stat good"><p class="big">{{GATED}}</p><p>called a conflict by Receipts — the relevance gate sets them aside</p></div>
+    <div class="stat bad"><p class="big">{{PLAINFC}}</p><p>of facts humans found <b>true</b> get a false “may conflict” from a simple top-sentence checker</p></div>
+    <div class="stat good"><p class="big">{{OURFC}}</p><p>with Receipts — only the single most relevant sentence may raise a conflict</p></div>
   </div>
-  <p style="margin-top:28px">{{E2LINE}}</p>
-  <p>{{STRESS}}</p>
-  <p class="src">Symmetric FEVER v0.2 test, 712 pairs (Schuster et al., EMNLP 2019) · FActScore PerplexityAI biographies, human labels (Min et al., EMNLP 2023) · settings chosen on dev topics, frozen before the held-out run · github.com/Ryugi62/receipts/docs/eval.md</p>
+  <p style="margin-top:26px">As a filter: Receipts marks <b>{{SKIP}}</b> of facts Backed ({{BPREC}} right), and <b>{{KEPT}}</b> of the facts humans could not support stay in the “check yourself” pile (random skipping of the same share: {{RAND}}).</p>
+  <p style="font-size:19px">Easy synthetic test — an unrelated sentence called a conflict: model alone {{RAW}} · shipped thresholds without the gate {{NOGATE}} · Receipts {{GATED}}. Limits: on raw paragraphs it ties the simple checker ({{H1R}} vs {{H1P}}); 30 of the 35 held-out people also appear in earlier test topics (new answers and labels).</p>
+  <p class="src">FActScore PerplexityAI biographies, 1,253 human-labelled facts, 35 topics (Min et al., EMNLP 2023) · Symmetric FEVER v0.2 test, 712 pairs (Schuster et al., EMNLP 2019) · settings chosen on dev topics and frozen before the held-out run · github.com/Ryugi62/receipts/docs/eval.md</p>
 </section>
 <section id="arch">
   <h2>How it works — all in the browser</h2>

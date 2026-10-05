@@ -13,7 +13,12 @@ const gated = cell('Receipts as shipped')[8].match(/= ([\d.]+%)/)[1]
 const nums = JSON.parse(readFileSync('web/numbers.json', 'utf8')).lines
 const e2line = (nums.find((l) => l.includes('fresh held-out')) ?? '').replace(/<[^>]+>/g, '')
 const stress = (nums.find((l) => l.includes('Balanced accuracy')) ?? '').replace(/<[^>]+>/g, '')
-const html = readFileSync('docs/gallery/gallery.html', 'utf8').replace('{{RAW}}', raw).replace('{{GATED}}', gated).replace('{{E2LINE}}', e2line).replace('{{STRESS}}', stress)
+const nogate = cell('shipped thresholds, gate OFF')[8].match(/= ([\d.]+%)/)[1]
+const trow = (file, name) => readFileSync(file, 'utf8').split('\n').find((l) => l.startsWith(`| ${name}`)).split('|').map((c) => c.trim().replace(/ \[.*?\]/, '').replace(/ \(n=\d+\)/, ''))
+const tr = trow('docs/results/triage-perplexity.md', 'Receipts'), tp = trow('docs/results/triage-perplexity.md', 'plain checker')
+const h1r = trow('docs/results/h1-report.md', 'Receipts'), h1p = trow('docs/results/h1-report.md', 'plain checker')
+const fill = { RAW: raw, GATED: gated, NOGATE: nogate, E2LINE: e2line, STRESS: stress, OURFC: tr[6], PLAINFC: tp[6], SKIP: tr[7], BPREC: tr[4], KEPT: tr[8], RAND: tr[9], H1R: h1r[2], H1P: h1p[2] }
+const html = readFileSync('docs/gallery/gallery.html', 'utf8').replace(/\{\{(\w+)\}\}/g, (_, k) => fill[k])
 writeFileSync('docs/gallery/gallery.rendered.html', html)
 
 const browser = await chromium.launch()

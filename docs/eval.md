@@ -19,11 +19,19 @@ Public, human-labelled data; no training; every table below is produced by a scr
 - **As a filter (triage view):** on the fresh set it marks 55.7 % of facts Backed (94.1 % right), and 79.2 % of the facts humans
   could not support stay in the "check yourself" pile; skipping the same share at random would keep 44.3 %. The plain checker keeps
   84.3 % but lets you skip only 43.7 %.
+- **Beyond biographies (E4, SPEC §12, run once with the shipped settings):** the app's whole path — topic guess, splitter, live
+  Wikipedia, model, gate — on 355 original FEVER claims: balanced accuracy 75.5 % vs 68.4 % for the plain checker (paired
+  difference +7.0 points [4.6, 9.5]); false "May conflict" on true claims 5.4 % vs 18.4 %; "May conflict" is right 88.1 % of the
+  time but names only 28.4 % of the false claims (plain checker: 70.7 %).
+- **The gate's cost on real refutations (E1):** with the correct FEVER evidence sentence handed over, shipped Receipts decides
+  55.9 % of claims (97.5 % right when it decides) and calls 49.2 % of refutations a conflict, vs 89.3 % for the plain checker.
+- **On a slowed laptop** (Chrome CPU throttled 4×, fresh profile, scripts/slow-laptop.mjs): first result 21 s and all four claims
+  44 s on the first visit including the model download; a six-sentence answer 66 s once the models are cached.
 - v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
 - **Revision 3 missed its bar, twice** (SPEC §11, pushed before each run): cleaning the evidence text (+0.7 points on dev) and
   reading 8 or 10 sentences instead of 5 (≤ +0.5) both stayed under the pre-registered +1.0 bar, so neither shipped; only two bug
   fixes did. A fresh check of the app's whole path (H1, 375 sentences, 49 new topics) gives 55.2 % — the same as the plain checker
-  (−0.3 points [−2.7, 1.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
+  (Receipts − plain = +0.3 points [−2.0, 2.8]); it backs 13 % of the sentences humans support. Whole raw sentences remain the weak spot.
 
 ## History and protocol
 1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
@@ -41,7 +49,12 @@ Public, human-labelled data; no training; every table below is produced by a scr
    subject name) plus two options chosen on dev only — evidence clean-up and wider reading. Neither cleared the +1.0-point bar.
    H1 was run once after the choice was pushed, on the 49 ChatGPT test topics never run at sentence level. Disclosure: while
    diagnosing I looked at two items of the earlier E-full set, whose 40 topics are excluded from H1.
-6. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
+6. **Server-side timestamps.** Every push runs the site's GitHub Actions workflow, and GitHub records when
+   (https://github.com/Ryugi62/receipts/actions): §9 pre-registration 2026-10-05 10:45:09Z → v2 settings frozen 10:48:38Z →
+   held-out results 12:10:44Z; §11 pre-registration 16:56:19Z → §11.1 17:07:00Z → selection pushed 17:47:35Z → H1 report
+   17:50:42Z; §12 (E4) pushed before its run. Disclosure: the H1 run that stores raw model scores finished at 17:41Z, before the
+   selection was pushed; the selection script reads only the dev file, and the H1 report was produced after the push.
+7. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
    Receipts; it is kept in the tables for the baselines only and is not used as evidence.
 
 ## Revision 3 — pre-registered options that did not clear the bar (dev), and H1
@@ -80,29 +93,71 @@ Decision (ship only if ≥ 1.0 point above v2, top 5, raw evidence): **keep v2 s
 
 ### H1 — the app's whole path with the v3 bug fixes, sentence level, 49 ChatGPT test topics not in E-full (fresh at this level, run once) — 375 items, 49 topics, 69.3% not supported by humans
 
-| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
-|---|---|---|---|---|---|---|---|---|
-| Receipts (v2 settings, as shipped) | 55.2% [51.6%–58.4%] | — | 68.2% (n=22) | 13.0% | 1.7% | 5.9% | 97.3% | 94.1% |
-| plain checker (top sentence + raw NLI label) | 54.9% [51.8%–57.8%] | -0.3 pts [-2.7, 1.8] | 76.5% (n=17) | 11.3% | 9.6% | 4.5% | 98.5% | 95.5% |
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 55.2% [51.6%–58.4%] | — | 68.2% (n=22) | 13.0% | 1.7% | 5.9% | 97.3% | 94.1% | 7.3% | 90.5% (n=21) |
+| plain checker (top sentence + raw NLI label) | 54.9% [51.8%–57.8%] | 0.3 pts [-2.0, 2.8] | 76.5% (n=17) | 11.3% | 9.6% | 4.5% | 98.5% | 95.5% | 19.6% | 82.3% (n=62) |
 
 "Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+## E4 — beyond biographies: the whole app path on original FEVER claims (SPEC §12)
+### E4 — the app's whole path on original FEVER claims beyond biographies (Symmetric FEVER dev+test originals, FEVER labels, shipped settings, run once) — 355 items, 355 topics, 58.6% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 75.5% [70.6%–79.3%] | — | 89.1% (n=92) | 55.8% | 5.4% | 25.9% | 95.2% | 74.1% | 28.4% | 88.1% (n=67) |
+| plain checker (top sentence + raw NLI label) | 68.4% [63.5%–72.0%] | 7.0 pts [4.6, 9.5] | 84.9% (n=73) | 42.2% | 18.4% | 20.6% | 94.7% | 79.4% | 70.7% | 84.5% (n=174) |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+## Slowed-laptop timing
+```
+{
+ "cpuSlowdown": 4,
+ "coldWithDownload": {
+  "sample": "Eiffel Tower",
+  "firstClaimS": 21.2,
+  "allS": 44.4,
+  "summary": "3 of 4 claims backed",
+  "claims": 4
+ },
+ "warmCached": {
+  "sample": "Julia Faye",
+  "firstClaimS": 37.9,
+  "allS": 65.9,
+  "summary": "2 of 11 claims backed",
+  "claims": 6
+ },
+ "when": "2026-10-05T18:11:14.272Z",
+ "note": "fresh profile; network = this machine’s connection; laptop CPU slowed with Emulation.setCPUThrottlingRate"
+}
+```
 
 ## Triage view (share you can skip vs errors left in the "check" pile)
 ### Triage view — fresh held-out PerplexityAI (v2 run; code before the v3 bug fixes) — 1253 items, 35 topics, 15.7% not supported by humans
 
-| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
-|---|---|---|---|---|---|---|---|---|
-| Receipts (v2 settings, as shipped) | 70.7% [66.3%–74.0%] | — | 94.1% (n=698) | 62.2% | 3.6% | 55.7% | 79.2% | 44.3% |
-| plain checker (top sentence + raw NLI label) | 66.6% [63.0%–69.8%] | -4.1 pts [-6.3, -2.1] | 94.3% (n=548) | 49.0% | 12.9% | 43.7% | 84.3% | 56.3% |
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 70.7% [67.1%–74.1%] | — | 94.1% (n=698) | 62.2% | 3.6% | 55.7% | 79.2% | 44.3% | 6.1% | 24.0% (n=50) |
+| plain checker (top sentence + raw NLI label) | 66.6% [63.2%–70.0%] | 4.1 pts [1.9, 6.4] | 94.3% (n=548) | 49.0% | 12.9% | 43.7% | 84.3% | 56.3% | 25.4% | 26.9% (n=186) |
 
 "Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
 
 ### Triage view — ChatGPT test topics (seen in v1; code before the v3 bug fixes) — 2774 items, 89 topics, 37.0% not supported by humans
 
-| System | Balanced accuracy [95 % CI] | Δ vs Receipts (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |
-|---|---|---|---|---|---|---|---|---|
-| Receipts (v2 settings, as shipped) | 72.4% [70.2%–74.5%] | — | 85.2% (n=1307) | 63.7% | 3.5% | 47.1% | 81.1% | 52.9% |
-| plain checker (top sentence + raw NLI label) | 67.1% [64.9%–68.8%] | -5.3 pts [-6.7, -4.1] | 85.9% (n=964) | 47.4% | 11.9% | 34.8% | 86.8% | 65.2% |
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 72.4% [70.2%–74.4%] | — | 85.2% (n=1307) | 63.7% | 3.5% | 47.1% | 81.1% | 52.9% | 8.5% | 58.8% (n=148) |
+| plain checker (top sentence + raw NLI label) | 67.1% [64.9%–68.8%] | 5.3 pts [4.1, 6.7] | 85.9% (n=964) | 47.4% | 11.9% | 34.8% | 86.8% | 65.2% | 26.2% | 56.4% (n=477) |
+
+"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
+
+### PerplexityAI held-out, only the 5 people NOT in the ChatGPT test topics (small n) — 118 items, 5 topics, 25.4% not supported by humans
+
+| System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Receipts (v2 settings, as shipped) | 66.7% [44.8%–77.7%] | — | 89.8% (n=49) | 50.0% | 5.7% | 41.5% | 83.3% | 58.5% | 10.0% | 37.5% (n=8) |
+| plain checker (top sentence + raw NLI label) | 62.1% [53.2%–72.3%] | 4.5 pts [-9.3, 8.0] | 87.8% (n=41) | 40.9% | 15.9% | 34.7% | 83.3% | 65.3% | 36.7% | 44.0% (n=25) |
 
 "Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).
 

@@ -1,8 +1,8 @@
-### Triage view — fresh held-out PerplexityAI (v2 run; code before the v3 bug fixes) — 1253 items, 35 topics, 15.7% not supported by humans
+### E4 — the app's whole path on original FEVER claims beyond biographies (Symmetric FEVER dev+test originals, FEVER labels, shipped settings, run once) — 355 items, 355 topics, 58.6% not supported by humans
 
 | System | Balanced accuracy [95 % CI] | Receipts minus this system (paired 95 % CI) | "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Receipts (v2 settings, as shipped) | 70.7% [67.1%–74.1%] | — | 94.1% (n=698) | 62.2% | 3.6% | 55.7% | 79.2% | 44.3% | 6.1% | 24.0% (n=50) |
-| plain checker (top sentence + raw NLI label) | 66.6% [63.2%–70.0%] | 4.1 pts [1.9, 6.4] | 94.3% (n=548) | 49.0% | 12.9% | 43.7% | 84.3% | 56.3% | 25.4% | 26.9% (n=186) |
+| Receipts (v2 settings, as shipped) | 75.5% [70.6%–79.3%] | — | 89.1% (n=92) | 55.8% | 5.4% | 25.9% | 95.2% | 74.1% | 28.4% | 88.1% (n=67) |
+| plain checker (top sentence + raw NLI label) | 68.4% [63.5%–72.0%] | 7.0 pts [4.6, 9.5] | 84.9% (n=73) | 42.2% | 18.4% | 20.6% | 94.7% | 79.4% | 70.7% | 84.5% (n=174) |
 
 "Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).

@@ -35,32 +35,33 @@ const verdict = (p: Part, r: Rec) => (r.parts ? aggregateVerdicts(r.parts.map((x
 type Pre = { topic: string; label: 'S' | 'NS'; v: string[] }
 const rs: Pre[] = recs.map((r) => ({ topic: r.key.split('|')[0], label: r.label, v: systems.map(([, p]) => verdict(p, r)) }))
 function score(xs: Pre[], i: number) {
-  let tp = 0, fn = 0, tn = 0, fp = 0, b = 0, bS = 0, fc = 0, nS = 0
+  let tp = 0, fn = 0, tn = 0, fp = 0, b = 0, bS = 0, fc = 0, nS = 0, c = 0, cNS = 0
   for (const r of xs) {
     const v = r.v[i], flag = v !== 'backed'
     if (r.label === 'NS') flag ? tp++ : fn++
     else { nS++; flag ? fp++ : tn++; if (v === 'contradicted') fc++ }
     if (v === 'backed') { b++; if (r.label === 'S') bS++ }
+    if (v === 'contradicted') { c++; if (r.label === 'NS') cNS++ }
   }
   return { bal: (tp / Math.max(1, tp + fn) + tn / Math.max(1, tn + fp)) / 2, backedPrec: b ? bS / b : NaN, backed: b, skip: b / xs.length,
-    kept: tp / Math.max(1, tp + fn), flagged: (tp + fp) / xs.length, fc: fc / Math.max(1, nS), backedOfSupported: tn / Math.max(1, tn + fp) }
+    kept: tp / Math.max(1, tp + fn), caught: cNS / Math.max(1, tp + fn), cPrec: c ? cNS / c : NaN, c, flagged: (tp + fp) / xs.length, fc: fc / Math.max(1, nS), backedOfSupported: tn / Math.max(1, tn + fp) }
 }
 const by = new Map<string, Pre[]>()
 for (const r of rs) by.set(r.topic, [...(by.get(r.topic) ?? []), r])
 const groups = [...by.values()]
-let seed = 13
+let seed = 7
 const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
 const samples = Array.from({ length: 1000 }, () => Array.from({ length: groups.length }, () => groups[Math.floor(rnd() * groups.length)]).flat())
 const q = (a: number[]) => { const s = [...a].sort((x, y) => x - y); return [s[25], s[974]] }
 const nNS = rs.filter((r) => r.label === 'NS').length
 const lines = [`### ${title} — ${rs.length} items, ${groups.length} topics, ${pct(nNS / rs.length)} not supported by humans`, '',
-  `| System | Balanced accuracy [95 % CI] | Δ vs ${same ? 'Receipts' : 'v2'} (paired 95 % CI) |`+' "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount |',
-  '|---|---|---|---|---|---|---|---|---|']
+  `| System | Balanced accuracy [95 % CI] | ${same ? 'Receipts' : 'v2'} minus this system (paired 95 % CI) |`+' "Backed" → humans agree | Human-supported items it backs | False conflicts on human-supported | Skip (Backed) | Errors kept in the "check" pile | Random flagging, same amount | Errors named as "May conflict" | "May conflict" → not supported |',
+  '|---|---|---|---|---|---|---|---|---|---|---|']
 systems.forEach(([name], i) => {
   const m = score(rs, i)
   const ci = q(samples.map((s) => score(s, i).bal))
-  const d = i === BASE ? '—' : (() => { const x = q(samples.map((s) => score(s, i).bal - score(s, BASE).bal)); return `${(100 * (m.bal - score(rs, BASE).bal)).toFixed(1)} pts [${(100 * x[0]).toFixed(1)}, ${(100 * x[1]).toFixed(1)}]` })()
-  lines.push(`| ${name} | ${pct(m.bal)} [${pct(ci[0])}–${pct(ci[1])}] | ${d} | ${Number.isNaN(m.backedPrec) ? '—' : pct(m.backedPrec)} (n=${m.backed}) | ${pct(m.backedOfSupported)} | ${pct(m.fc)} | ${pct(m.skip)} | ${pct(m.kept)} | ${pct(m.flagged)} |`)
+  const d = i === BASE ? '—' : (() => { const x = q(samples.map((s) => score(s, BASE).bal - score(s, i).bal)); return `${(100 * (score(rs, BASE).bal - m.bal)).toFixed(1)} pts [${(100 * x[0]).toFixed(1)}, ${(100 * x[1]).toFixed(1)}]` })()
+  lines.push(`| ${name} | ${pct(m.bal)} [${pct(ci[0])}–${pct(ci[1])}] | ${d} | ${Number.isNaN(m.backedPrec) ? '—' : pct(m.backedPrec)} (n=${m.backed}) | ${pct(m.backedOfSupported)} | ${pct(m.fc)} | ${pct(m.skip)} | ${pct(m.kept)} | ${pct(m.flagged)} | ${pct(m.caught)} | ${Number.isNaN(m.cPrec) ? '—' : pct(m.cPrec)} (n=${m.c}) |`)
 })
 lines.push('', '"Errors kept in the check pile" = share of human-unsupported items that are not marked Backed. Flagging the same share of items at random would keep that share of errors (last column).')
 const out = lines.join('\n')

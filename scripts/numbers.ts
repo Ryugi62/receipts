@@ -9,15 +9,21 @@ const fresh = readFileSync('docs/results/e2-fact-test-nli-deberta-v3-xsmall-Perp
 const facts = fresh.split('\n')[0].match(/— (\d+) facts/)![1]
 const r = row(fresh, 'Receipts'), p = row(fresh, 'plain checker')
 const u = (cells: string[]) => cells[8].match(/= ([\d.]+%)/)![1]
+const nogate = row(e1, 'shipped thresholds, gate OFF')[8].match(/= ([\d.]+%)/)![1]
+const t = readFileSync('docs/results/triage-perplexity.md', 'utf8')
+const c = row(t, 'Receipts').map((x) => x.replace(/ \[.*?\]/, ''))
+const h = readFileSync('docs/results/h1-report.md', 'utf8')
+const hr = row(h, 'Receipts').map((x) => x.replace(/ \[.*?\]/, '')), hp = row(h, 'plain checker').map((x) => x.replace(/ \[.*?\]/, ''))
 const lines = [
-  `Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${u(row(e1, 'plain checker'))}</b> of the time; Receipts: <b>${u(row(e1, 'Receipts as shipped'))}</b> (712 pairs, Symmetric FEVER).`,
-  `On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, ${Number(facts).toLocaleString('en')} facts), Receipts raises a false "may conflict" on true facts <b>${short(r[5])}</b> of the time, vs <b>${short(p[5])}</b> for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.`,
-  `Balanced accuracy ${short(r[2])} vs ${short(p[2])}; "Backed" is as precise as the simpler checker (${short(r[3])}) and covers more facts. Settings were frozen on separate development topics before this run.`,
+  `On a <b>held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, ${Number(facts).toLocaleString('en')} facts; new answers, though 30 of the 35 people also appear in earlier test topics), Receipts raises a false "may conflict" on true facts <b>${short(r[5])}</b> of the time, vs <b>${short(p[5])}</b> for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.`,
+  `Use it as a filter: on the same set it marks <b>${c[7]}</b> of facts Backed (${c[4].replace(/ \(n=\d+\)/, '')} of those are right), and <b>${c[8]}</b> of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep ${c[9]}. Balanced accuracy ${short(r[2])} vs ${short(p[2])}; settings were frozen on separate development topics before this run.`,
   (() => {
-    const t = readFileSync('docs/results/triage-perplexity.md', 'utf8')
-    const c = row(t, 'Receipts').map((x) => x.replace(/ \[.*?\]/, ''))
-    return `Use it as a filter: on the same held-out set it marks <b>${c[7]}</b> of facts Backed (${c[4].replace(/ \(n=\d+\)/, '')} of those are right), and <b>${c[8]}</b> of the facts humans could not support stay in the "check yourself" pile — skipping the same share at random would keep ${c[9]}. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.`
+    const e = readFileSync('docs/results/e4-report.md', 'utf8')
+    const er = row(e, 'Receipts').map((x) => x.replace(/ \[.*?\]/, '')), ep = row(e, 'plain checker').map((x) => x.replace(/ \[.*?\]/, ''))
+    return `Beyond biographies — the app's whole path on 355 FEVER claims (films, places, science, sport…): balanced accuracy <b>${er[2]}</b> vs ${ep[2]} for the simpler checker, false "may conflict" on true claims ${er[6]} vs ${ep[6]}; when it says "May conflict" it is right ${er[11].replace(/ \(n=\d+\)/, '')} of the time.`
   })(),
+  `Limits: on whole raw paragraphs through the app it ties the simpler checker (${hr[2]} vs ${hp[2]}, 375 sentences) and backs only ${hr[5]} of the sentences humans support. It rarely names the mistake itself: "May conflict" is a hint to read the sentence, not a verdict.`,
+  `Easy synthetic test: given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>${u(row(e1, 'plain checker'))}</b> of the time, ${nogate} with our thresholds but no gate, and Receipts <b>${u(row(e1, 'Receipts as shipped'))}</b> (712 pairs, Symmetric FEVER).`,
 ]
 writeFileSync('web/numbers.json', JSON.stringify({ lines }, null, 1) + '\n')
 const md = lines.map((l) => '- ' + l.replace(/<\/?b>/g, '**')).join('\n') + '\n- Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)'
