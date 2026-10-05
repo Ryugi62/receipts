@@ -9,9 +9,9 @@ each one, and a language-inference model **running in your browser** marks every
 
 <!-- NUMBERS -->
 - Given an **unrelated** sentence, the small model on its own calls it a contradiction **74.3%** of the time; Receipts: **0.3%** (712 pairs, Symmetric FEVER).
-- On a **fresh held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts): when Receipts says **Backed**, humans agree **94.1%**; it raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker.
-- Balanced accuracy 70.7% vs 66.6% for that simpler checker. Settings were chosen on separate development topics and frozen before this run.
-- Limits: "No receipt" is common (about half of all facts), and "May conflict" is a hint to read the sentence, not a verdict.
+- On a **fresh held-out set** of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts), Receipts raises a false "may conflict" on true facts **3.6%** of the time, vs **12.9%** for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.
+- Balanced accuracy 70.7% vs 66.6%; "Backed" is as precise as the simpler checker (94.1%) and covers more facts. Settings were frozen on separate development topics before this run.
+- The price: it rarely catches a mistake by itself. "No receipt" is common, and "May conflict" is a hint to read the sentence, not a verdict.
 - Full method, baselines, intervals and misses: [docs/eval.md](docs/eval.md)
 <!-- /NUMBERS -->
 
@@ -24,9 +24,13 @@ Wikipedia that backs or contradicts each claim — and leaves the judgement to y
 Small natural-language-inference models (the kind that decide whether sentence A supports sentence B) are over-confident on
 sentences that are **not about the claim**: they often call them a "contradiction". A plain fact-checker built on them tells you
 a true fact is false — my first version said Julia Faye's death date was contradicted by a sentence about her father.
-Receipts puts a **relevance gate** in front of the model: an evidence sentence may decide only if it is close in meaning to the
-claim, and a conflict may only come from the single most relevant sentence and only if it is about the same subject. When a plain "top sentence + raw
-model" checker would have answered differently, the app shows that answer and why the sentence was set aside.
+Two rules fix most of it, and the evaluation shows which does what:
+- **Asymmetric evidence:** any good sentence may back a claim, but only the single most relevant one may raise a conflict.
+  On real chatbot answers this is where the gain comes from (false conflicts on true facts 3.6 % vs 12.9 % for a plain checker).
+- **Relevance gate:** a sentence must be close in meaning, and a conflict must be about the same subject. It matters when the
+  evidence is about something else (unrelated sentences: 48.2 % called a conflict without it, 0.3 % with it).
+The price: Receipts rarely catches a mistake by itself; it tells you which claims are backed and which to check.
+When a plain "top sentence + raw model" checker would have answered differently, the app shows that answer and why.
 
 ## How it works
 1. **Split** the answer into sentences, resolve "he/she/it" to the topic, and break long sentences into atomic parts

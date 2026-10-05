@@ -86,7 +86,7 @@ function bootstrap(rs: Rec[], s: System, key: 'bal' | 'backedPrec' | 'contraPrec
 const f = (x: number) => (Number.isNaN(x) ? '—' : pct(x))
 const fci = (x: number, c: [number, number]) => `${f(x)} [${f(c[0])}–${f(c[1])}]`
 function table(rs: Rec[], title: string) {
-  const out = [`### ${title} — ${rs.length} facts, ${new Set(rs.map((r) => r.key.split('|')[0])).size} topics, ${f(rs.filter((r) => r.label === 'NS').length / rs.length)} of facts not supported by humans`, '',
+  const out = [`### ${title} — ${rs.length} ${level === "sentence" ? "sentences" : "facts"}, ${new Set(rs.map((r) => r.key.split('|')[0])).size} topics, ${f(rs.filter((r) => r.label === 'NS').length / rs.length)} of facts not supported by humans`, '',
     '| System | Balanced accuracy | "Backed" → humans agree | "May conflict" → humans: not supported | False conflicts on human-supported facts | Conflicts resting on a sentence about someone/something else | Share flagged | Est. supported (human) |',
     '|---|---|---|---|---|---|---|---|']
   for (const s of systems) {

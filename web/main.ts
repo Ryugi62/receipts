@@ -62,6 +62,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
     const k = b.dataset.sample as keyof typeof samples
     answerEl.value = samples[k]
     topicEl.value = k
+    results.innerHTML = ''
+    $('summary').hidden = true
     answerEl.focus()
   }),
 )

@@ -10,16 +10,18 @@ Public, human-labelled data; no training; every table below is produced by a scr
 "Plain checker" = the obvious baseline: take the most relevant sentence and the NLI model's raw label, no gate, no thresholds.
 
 ## The short version
-- **Fresh held-out set (PerplexityAI biographies, 1,253 facts, never run before the settings were frozen):** balanced accuracy
-  **70.7 %** vs 66.6 % for the plain checker; when Receipts says **Backed**, humans agree **94.1 %**; false "May conflict" on
-  facts humans found true **3.6 %** vs **12.9 %** for the plain checker.
-- **ChatGPT test topics (2,774 facts; seen once with v1, re-scored with v2 — labelled as such):** 72.4 % vs 67.1 %; false
-  conflicts 3.5 % vs 11.9 %.
-- **Unrelated sentences (Symmetric FEVER, 712 pairs):** the small model alone calls them a contradiction 74.3 % of the time;
-  Receipts 0.3 %. Switching only the gate off brings it back to 48.2 %.
-- **Misses, stated plainly:** on whole sentences from raw answers (the app's own splitter and topic guess) Receipts backs few
-  sentences (balanced accuracy 57.1 %, tied with the plain checker); "May conflict" is only a hint (24–63 % precision depending
-  on the set); v1 missed my 70 % target on its held-out run (68.0 %), which is why revision 2 exists.
+- **Fresh held-out set (PerplexityAI biographies, 1,253 facts, 35 topics, run once after freezing):** balanced accuracy
+  **70.7 %** vs 66.6 % for the plain checker (paired topic-bootstrap difference +4.1 points, 95 % CI [1.9, 6.4]); false
+  "May conflict" on facts humans found true **3.6 %** vs **12.9 %**. The 70 % target is met only as a point estimate (borderline).
+- **What does the work (ablation):** almost all of the gain on real answers comes from one asymmetric rule — any good sentence
+  may back a claim, but only the single most relevant sentence may raise a conflict. Removing it erases the gain (+0.0 points)
+  and false conflicts jump to 23 %. The similarity gate changes nothing on these answers; it matters when the evidence is about
+  something else: unrelated sentences called a conflict 48.2 % without it, 0.3 % with it (Symmetric FEVER, 712 pairs).
+- **The price, stated plainly:** Receipts rarely catches an error by itself — only 6 % of unsupported facts become
+  "May conflict" (plain checker: 25 %). "Backed" is as precise as the plain checker (94.1 % vs 94.3 %, base rate 84 % supported)
+  but covers more facts (698 vs 548). On InstructGPT answers, where 85 % of facts are unsupported, "Backed" is right only 40 %
+  of the time. On whole sentences through the app's own splitter and topic guess it backs few (balanced 57.1 %, tied).
+- v1 missed: 68.0 % on its held-out run, tied with the plain checker and worse on false conflicts — that is why v2 exists.
 
 ## History and protocol
 1. FActScore topics split by a hash of the name into dev (2/5) and test (3/5) before any result.
@@ -27,12 +29,17 @@ Public, human-labelled data; no training; every table below is produced by a scr
    worse on false conflicts (13.9 % vs 11.9 %). Reported below unchanged.
 3. **v2** (SPEC §9, pushed to GitHub before running it): two decision options — a conflict may only come from the most relevant
    gated sentence; disagreeing sources may abstain — and a selection rule that requires beating the plain checker on false
-   conflicts and conflict precision **on dev**. Then one run on a **fresh** set (PerplexityAI, 40 hash-chosen test topics).
+   conflicts and conflict precision **on dev**. Then one run on a **fresh** set (PerplexityAI, 40 hash-chosen test topics; 5 had
+   no supported/unsupported facts, leaving 35). The answers and labels are new, but 30 of the 35 people also appear in the
+   ChatGPT test topics whose v1 errors motivated v2.
 4. Disclosure: Julia Faye, Carlos Santana and Marianne McAndrew are UI samples I looked at while building; each table is also
    shown without them. Post-freeze code changes (batching; skipping "(disambiguation)" pages; dropping pronunciation
    parentheses) were not tuned on any test data; the PerplexityAI and sentence-level runs used the final code.
 5. The count "conflicts resting on a sentence about someone else" uses the gate's own subject rule, so it is circular for
    Receipts; it is kept in the tables for the baselines only and is not used as evidence.
+
+## Revision 2 — component ablation
+${inc('docs/results/ablation-v2.md')}
 
 ## Revision 2 selection (dev)
 ${inc('docs/results/v2-selection.md')}

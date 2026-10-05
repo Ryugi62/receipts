@@ -1,8 +1,8 @@
 {
  "lines": [
   "Given an <b>unrelated</b> sentence, the small model on its own calls it a contradiction <b>74.3%</b> of the time; Receipts: <b>0.3%</b> (712 pairs, Symmetric FEVER).",
-  "On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts): when Receipts says <b>Backed</b>, humans agree <b>94.1%</b>; it raises a false \"may conflict\" on true facts <b>3.6%</b> of the time, vs <b>12.9%</b> for a simpler top-sentence checker.",
-  "Balanced accuracy 70.7% vs 66.6% for that simpler checker. Settings were chosen on separate development topics and frozen before this run.",
-  "Limits: \"No receipt\" is common (about half of all facts), and \"May conflict\" is a hint to read the sentence, not a verdict."
+  "On a <b>fresh held-out set</b> of chatbot answers with human labels (FActScore, PerplexityAI biographies, 1,253 facts), Receipts raises a false \"may conflict\" on true facts <b>3.6%</b> of the time, vs <b>12.9%</b> for a simpler top-sentence checker — mostly thanks to one rule: only the single most relevant sentence may raise a conflict.",
+  "Balanced accuracy 70.7% vs 66.6%; \"Backed\" is as precise as the simpler checker (94.1%) and covers more facts. Settings were frozen on separate development topics before this run.",
+  "The price: it rarely catches a mistake by itself. \"No receipt\" is common, and \"May conflict\" is a hint to read the sentence, not a verdict."
  ]
 }

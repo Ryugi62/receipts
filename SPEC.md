@@ -18,7 +18,7 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
   human labels (balanced accuracy, precision of *Contradicted / No receipt* as "needs checking") with Wilson 95 % intervals,
   and the estimated vs. human factual precision of ChatGPT. Thresholds are chosen on a dev split of topics only.
   Target: balanced accuracy ≥ 0.70 on held-out topics; numbers are reported as they come out, misses listed.
-- 0 network calls carry the pasted answer text: only search terms (claim text) go to Wikipedia (unit test on the adapter).
+- The pasted answer is never sent as one block: each claim's text goes to Wikipedia search separately (unit test on the use case).
 - Works with no account and no API key; first check < 60 s on a laptop including model download (measured, reported).
 - Non-goals: no model training or fine-tuning (pretrained models only; thresholds are the only tuned numbers), no server,
   no storage of user text, no claim that Wikipedia is ground truth (UI says "Backed by Wikipedia", not "true").
@@ -78,7 +78,7 @@ ML Empowerment Build Challenge 3.0 (Devpost) — "Build a project that addresses
 - Model: ship the model whose chosen setting meets both floors; if both do, the smaller one unless the larger is ≥ 3 points
   better in balanced accuracy on dev. The held-out test run happens once, after this choice is committed.
 
-## 8. Results against the targets (held-out, 2026-10-05 — details docs/eval.md)
+## 8. Results against the targets (v1 held-out run, 2026-10-05 — superseded by §10; details docs/eval.md)
 - E1 swapped evidence → "no receipt" ≥ 90 %: **met** (shipped settings 710/712 = 99.7 %; conflicts on unrelated sentences 0/712).
 - E2 balanced accuracy ≥ 0.70 on held-out topics: **missed** — 68.0 % [65.4–70.2] (2,774 facts, 89 topics); "Backed" precision 83.7 %.
 - 0 network calls carry the pasted answer: met (unit test G/W/T 6). No key, no account: met. First check < 60 s with download:
@@ -96,3 +96,10 @@ from the most relevant gated sentence (`conflictFromTopOnly`), and disagreeing s
 - Full app path (claim splitter + topic guess, no hints) at sentence level on 40 hash-chosen ChatGPT **test** topics.
 - The v1 ChatGPT test set is re-scored with v2 settings and labelled "seen before (v1)".
 - Not reported as evidence: the "conflicts resting on someone else" count (it uses the gate's own subject rule — circular).
+
+## 10. Revision 2 results (details docs/eval.md, docs/results/ablation-v2.md)
+- Fresh held-out (PerplexityAI, 1,253 facts / 35 topics with labelled facts; 30 of the 35 people also appear in the ChatGPT
+  test set, with different answers and labels): balanced accuracy 70.7 % [67.1–74.1] vs 66.6 % for the plain checker — the
+  ≥ 0.70 target is met only as a point estimate (borderline). False conflicts on human-supported facts 3.6 % vs 12.9 %.
+- Most of the gain comes from the asymmetric decision rule, not the similarity gate (ablation). Few real errors are caught as
+  "May conflict". The full app path (own splitter, guessed topic) stays weak: 57.1 % at sentence level.
